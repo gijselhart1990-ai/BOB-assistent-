@@ -1,0 +1,9 @@
+node_modules/
+.env
+data/*.json
+data/tokens/
+data/audio/
+.wwebjs_auth/
+.wwebjs_cache/
+*.log
+WhatsApp Image*.jpeg

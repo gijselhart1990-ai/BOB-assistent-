@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BOB</title>
+<link rel="stylesheet" href="/css/bob.css">
+<link rel="stylesheet" href="/css/hologram.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 5a3 3 0 0 0-3 3 3 3 0 0 0-2 5.2A3 3 0 0 0 9.5 19 2.5 2.5 0 0 0 12 17"/>
+        <path d="M12 5a3 3 0 0 1 3 3 3 3 0 0 1 2 5.2A3 3 0 0 1 14.5 19 2.5 2.5 0 0 1 12 17"/>
+        <path d="M12 5v12"/>
+      </svg>
+    </span>
+    <span class="brand-name">Bob</span>
+  </div>
+
+  <form class="omnibox" id="omnibox" autocomplete="off">
+    <svg class="omnibox-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+    </svg>
+    <input id="omniboxInput" type="text" placeholder="Vraag BOB iets, of zoek…" aria-label="Vraag BOB iets">
+    <button type="button" class="omnibox-mic" id="micButton" title="Spreek met BOB (spatiebalk vasthouden)" aria-label="Spreken">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/>
+      </svg>
+    </button>
+    <kbd class="omnibox-kbd">⌘K</kbd>
+  </form>
+
+  <div class="topbar-actions">
+    <button class="icon-btn" id="briefingBtn" title="Spreek de dagbriefing uit" aria-label="Dagbriefing">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>
+      </svg>
+    </button>
+    <button class="icon-btn" id="refreshBtn" title="Ververs alles" aria-label="Ververs">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/>
+      </svg>
+    </button>
+    <button class="icon-btn" id="settingsBtn" title="Instellingen" aria-label="Instellingen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
+      </svg>
+    </button>
+    <div class="avatar" title="Sander"><span>S</span><i class="presence"></i></div>
+  </div>
+</header>
+
+<div class="shell">
+
+  <nav class="sidebar" id="sidebar">
+    <ul class="nav">
+      <li><a class="nav-item active" href="#vandaag"><span class="ni-icon dot-home"></span>Vandaag</a></li>
+      <li><a class="nav-item" href="#whatsapp"><span class="ni-icon" style="--c:#25d366"></span>WhatsApp<span class="badge" data-badge="whatsapp"></span></a></li>
+      <li><a class="nav-item" href="#google"><span class="ni-icon" style="--c:#4285f4"></span>Google<span class="badge" data-badge="gmail"></span></a></li>
+      <li><a class="nav-item" href="#outlook"><span class="ni-icon" style="--c:#0f6cbd"></span>Outlook<span class="badge" data-badge="outlook"></span></a></li>
+      <li><a class="nav-item" href="#agenda"><span class="ni-icon" style="--c:#ea4335"></span>Agenda<span class="badge" data-badge="agenda"></span></a></li>
+      <li><a class="nav-item" href="#todoist"><span class="ni-icon" style="--c:#e44332"></span>Todoist<span class="badge" data-badge="todoist"></span></a></li>
+      <li><a class="nav-item" href="#assistent"><span class="ni-icon" style="--c:#f59e0b"></span>BOB Assistent</a></li>
+      <li><a class="nav-item" href="#opdrachten"><span class="ni-icon" style="--c:#10b981"></span>Opdrachten<span class="badge" data-badge="missions"></span></a></li>
+      <li><a class="nav-item" href="#social"><span class="ni-icon" style="--c:#8b5cf6"></span>Social Media</a></li>
+    </ul>
+    <div class="nav-divider"></div>
+    <ul class="nav nav-secondary">
+      <li><a class="nav-item" href="#notities"><span class="ni-icon ni-line"></span>Notities</a></li>
+      <li><a class="nav-item" href="#bestanden"><span class="ni-icon ni-line"></span>Bestanden</a></li>
+      <li><a class="nav-item" href="#herinneringen"><span class="ni-icon ni-line"></span>Herinneringen</a></li>
+      <li><a class="nav-item" href="#tools"><span class="ni-icon ni-line"></span>Tools</a></li>
+      <li><a class="nav-item" href="#instellingen"><span class="ni-icon ni-line"></span>Instellingen</a></li>
+    </ul>
+    <button class="collapse" id="collapseBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      <span>Minimaliseer</span>
+    </button>
+  </nav>
+
+  <main class="content">
+    <div class="page-head">
+      <div>
+        <h1>Vandaag</h1>
+        <p class="page-date" id="pageDate">—</p>
+      </div>
+      <div class="page-head-actions">
+        <span class="sync" id="syncState">verbinden…</span>
+        <button class="ghost-btn" id="customizeBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h10M4 18h6"/></svg>
+          Aanpassen
+        </button>
+      </div>
+    </div>
+
+    <div class="demo-banner" id="demoBanner" hidden>
+      <strong>Demomodus.</strong> Dit zijn voorbeeldgegevens, geen echte agenda of mail.
+      Zet <code>BOB_DEMO=0</code> in <code>.env</code> zodra je connectoren gekoppeld zijn.
+    </div>
+
+    <div class="grid" id="grid">
+
+      <!-- ---------- kolom 1 ---------- -->
+      <section class="card" id="card-whatsapp" data-col="1">
+        <header class="card-head">
+          <span class="card-icon" style="--c:#25d366">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.7 15L2 22l5.2-1.3A10 10 0 1 0 12 2m0 2a8 8 0 1 1-4.1 14.8l-.3-.2-2.6.7.7-2.5-.2-.3A8 8 0 0 1 12 4m-3.3 4c-.2 0-.5.1-.7.4-.2.3-.8.8-.8 1.9s.8 2.2.9 2.4c.1.2 1.6 2.6 4 3.5 2 .8 2.4.6 2.8.6.4 0 1.4-.6 1.6-1.1.2-.6.2-1 .1-1.1l-.6-.3-1.5-.7c-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.5 6.5 0 0 1-3.2-2.8c-.1-.2 0-.4.1-.5l.4-.5.3-.5v-.4l-.7-1.6c-.2-.4-.4-.4-.5-.4z"/></svg>
+          </span>
+          <h2>WhatsApp</h2>
+          <span class="pill" data-pill="whatsapp">—</span>
+        </header>
+        <div class="card-body" data-body="whatsapp"><div class="skeleton"></div></div>
+        <footer class="card-foot"><a href="https://web.whatsapp.com" target="_blank" rel="noopener">Open WhatsApp <span class="arrow">↗</span></a></footer>
+      </section>
+
+      <section class="card" id="card-todoist" data-col="1">
+        <header class="card-head">
+          <span class="card-icon" style="--c:#e44332">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 8.5h14M5 13h14M5 17.5h9"/></svg>
+          </span>
+          <h2>Todoist</h2>
+          <span class="pill" data-pill="todoist">—</span>
+        </header>
+        <div class="card-body" data-body="todoist"><div class="skeleton"></div></div>
+        <footer class="card-foot"><a href="https://app.todoist.com" target="_blank" rel="noopener">Open Todoist <span class="arrow">↗</span></a></footer>
+      </section>
+
+      <section class="card card-missions" id="card-opdrachten" data-col="1">
+        <header class="card-head">
+          <span class="card-icon" style="--c:#10b981">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.5 11 14l4-5"/><circle cx="12" cy="12" r="9"/></svg>
+          </span>
+          <h2>Opdrachten</h2>
+          <span class="pill muted" id="agentMode">laden…</span>
+        </header>
+        <div class="card-body">
+          <form class="mission-form" id="missionForm">
+            <label class="sr-only" for="missionInput">Nieuwe opdracht voor BOB</label>
+            <input id="missionInput" maxlength="2400" placeholder="Geef BOB een opdracht…" autocomplete="off">
+            <button type="submit">Start</button>
+          </form>
+          <p class="mission-hint">Bijvoorbeeld: “onderzoek de markt voor …”, “onthoud dat …” of “maak Todoist-taak: …”</p>
+          <div class="mission-list" id="missionList"><div class="skeleton"></div></div>
+        </div>
+        <footer class="card-foot"><a href="#opdrachten" id="showActivity">Laatste acties <span class="arrow">↗</span></a></footer>
+      </section>
+
+      <!-- ---------- kolom 2 ---------- -->
+      <section class="card" id="card-agenda" data-col="2">
+        <header class="card-head">
+          <span class="card-icon" style="--c:#ea4335">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+          </span>
+          <h2>Agenda</h2>
+        </header>
+        <div class="agenda-toolbar" role="group" aria-label="Datum kiezen">
+          <button type="button" class="date-nav-btn" id="agendaPrev" aria-label="Vorige dag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <span class="agenda-label" id="agendaLabel"></span>
+          <button type="button" class="date-nav-today" id="agendaToday">Vandaag</button>
+          <input type="date" class="date-input" id="agendaDate" aria-label="Kies datum">
+          <button type="button" class="date-nav-btn" id="agendaNext" aria-label="Volgende dag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+        <div class="card-body" data-body="agenda"><div class="skeleton"></div></div>
+        <footer class="card-foot"><a href="https://calendar.google.com" target="_blank" rel="noopener">Volledige agenda bekijken <span class="arrow">↗</span></a></footer>
+      </section>
+
+      <section class="card card-assistant" id="card-assistent" data-col="2">
+        <header class="card-head">
+          <span class="card-icon" style="--c:#f59e0b">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/><circle cx="12" cy="12" r="3.5"/></svg>
+          </span>
+          <h2>BOB Assistent</h2>
+          <span class="pill" data-pill="brain">—</span>
+        </header>
+        <div class="card-body">
+          <div class="assistant-hello" id="assistantHello">
+            <span class="spark">✦</span>
+            <div>
+              <strong>Hallo Sander, ik ben BOB.</strong>
+              <p>Vraag me naar je agenda, je mail of je taken. Of houd de spatiebalk ingedrukt en praat gewoon tegen me.</p>
+            </div>
+          </div>
+          <div class="assistant-thread" id="assistantThread" hidden></div>
+          <div class="quick-actions">
+            <button class="quick" data-prompt="Geef me een korte briefing van mijn dag.">
+              <span class="q-ico">📋</span><span><b>Briefing</b><small>Mijn dag in het kort</small></span>
+            </button>
+            <button class="quick" data-prompt="Wat is vandaag het belangrijkste dat ik moet doen, en waarom?">
+              <span class="q-ico">🎯</span><span><b>Prioriteit</b><small>Wat eerst?</small></span>
+            </button>
+            <button class="quick" data-prompt="Welke mails vragen echt om een antwoord vandaag? Vat ze samen.">
+              <span class="q-ico">✉️</span><span><b>Mail triage</b><small>Wat vraagt actie</small></span>
+            </button>
+            <button class="quick" data-prompt="Waar zitten vandaag de gaten in mijn agenda waarin ik geconcentreerd kan werken?">
+              <span class="q-ico">🧠</span><span><b>Focusblok</b><small>Vind vrije tijd</small></span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- kolom 3 ---------- -->
+      <section class="card" id="card-google" data-col="3">
+        <header class="card-head">
+          <span class="card-icon" style="--c:#4285f4">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 8h8"/></svg>
+          </span>
+          <h2>Google</h2>
+          <span class="pill" data-pill="google">—</span>
+        </header>
+        <div class="card-body">
+          <div class="app-grid" data-body="google"><div class="skeleton"></div></div>
+        </div>
+      </section>
+
+      <section class="card" id="card-drive" data-col="3">
+        <header class="card-head">
+          <span class="card-icon" style="--c:#00ac47">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 3 8 0 5 9-5 9H8l-5-9z"/><path d="m8 3 5 9-5 9M13 12h8"/></svg>
+          </span>
+          <h2>Google Drive</h2>
+          <span class="pill muted" data-pill="drive">—</span>
+        </header>
+        <div class="card-body" data-body="drive"><div class="skeleton"></div></div>
+        <footer class="card-foot"><a href="https://drive.google.com" target="_blank" rel="noopener">Open Google Drive <span class="arrow">↗</span></a></footer>
+      </section>
+
+      <section class="card" id="card-outlook" data-col="3">
+        <header class="card-head">
+          <span class="card-icon" style="--c:#0f6cbd">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          </span>
+          <h2>Outlook</h2>
+          <span class="pill" data-pill="outlook">—</span>
+        </header>
+        <div class="card-body" data-body="outlook"><div class="skeleton"></div></div>
+        <footer class="card-foot"><a href="https://outlook.office.com/mail/" target="_blank" rel="noopener">Open Outlook <span class="arrow">↗</span></a></footer>
+      </section>
+
+      <section class="card" id="card-social" data-col="3">
+        <header class="card-head">
+          <span class="card-icon" style="--c:#8b5cf6">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 19a6 6 0 0 1 12 0M15.5 19a5 5 0 0 1 5.5-4.6"/></svg>
+          </span>
+          <h2>Social Media</h2>
+        </header>
+        <div class="card-body"><div class="app-grid" data-body="social"><div class="skeleton"></div></div></div>
+      </section>
+
+      <section class="card card-memory" id="card-geheugen" data-col="3">
+        <header class="card-head">
+          <span class="card-icon" style="--c:#8b5cf6">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6a3 3 0 0 0-3 3 3 3 0 0 0-2 5.2A3 3 0 0 0 9.5 19 2.5 2.5 0 0 0 12 17"/><path d="M12 6a3 3 0 0 1 3 3 3 3 0 0 1 2 5.2A3 3 0 0 1 14.5 19 2.5 2.5 0 0 1 12 17"/><path d="M12 6v12"/></svg>
+          </span>
+          <h2>Geheugen</h2>
+          <span class="pill muted" id="memoryCount">—</span>
+        </header>
+        <div class="card-body">
+          <div class="memory-list" id="memoryList"><div class="skeleton"></div></div>
+        </div>
+        <footer class="card-foot"><a href="#opdrachten">Lokaal opgeslagen · BOB gebruikt dit bij elk gesprek <span class="arrow">↗</span></a></footer>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- Spraak-overlay -->
+<div class="voice-layer" id="voiceLayer" hidden>
+  <div class="orb" id="orb"><span class="orb-core"></span><span class="orb-ring"></span><span class="orb-ring r2"></span></div>
+  <p class="voice-caption" id="voiceCaption">Luisteren…</p>
+  <p class="voice-hint">Laat de spatiebalk los om te versturen · <kbd>Esc</kbd> annuleert</p>
+</div>
+
+<button class="fab" id="fabMic" title="Praat met BOB" aria-label="Praat met BOB">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/>
+  </svg>
+</button>
+
+<div class="toasts" id="toasts"></div>
+
+<script src="/js/voice.js" type="module"></script>
+<script src="/js/app.js" type="module"></script>
+<script src="/js/hologram.js" type="module"></script>
+</body>
+</html>

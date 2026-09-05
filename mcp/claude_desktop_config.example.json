@@ -1,0 +1,39 @@
+{
+  "_lees_dit": [
+    "Voorbeeldconfig voor Claude Desktop op Windows.",
+    "Locatie van het echte bestand: %APPDATA%\\Claude\\claude_desktop_config.json",
+    "Plak NIET dit hele bestand over je bestaande config heen — dan raak je je andere servers kwijt.",
+    "Draai in plaats daarvan:  node scripts/install-mcp.js --write",
+    "Dat voegt alleen de 'bob'-entry toe en maakt eerst een back-up.",
+    "Vervang C:\\\\Users\\\\Sander\\\\BOB door het echte pad waar BOB staat.",
+    "De drie servers onder 'bob' zijn optioneel: handig, maar BOB werkt ook zonder."
+  ],
+
+  "mcpServers": {
+    "bob": {
+      "command": "node",
+      "args": ["C:\\Users\\Sander\\BOB\\mcp\\bob-mcp-server.js"],
+      "env": { "BOB_URL": "http://localhost:4321" }
+    },
+
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:\\Users\\Sander\\BOB",
+        "C:\\Users\\Sander\\standup-zorg"
+      ]
+    },
+
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    }
+  }
+}
