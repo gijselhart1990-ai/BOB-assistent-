@@ -89,8 +89,8 @@ export default function Home() {
   async function authenticate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setAuthError('');
-    if (!/^\d{6}$/.test(pin)) {
-      setAuthError('Kies een pincode van precies 6 cijfers.');
+    if (!/^\d{8}$/.test(pin)) {
+      setAuthError('Kies een pincode van precies 8 cijfers.');
       return;
     }
     if (authMode === 'register' && pin !== confirmPin) {
@@ -108,7 +108,9 @@ export default function Home() {
       });
       const data = await response.json().catch(() => ({})) as { authToken?: string; message?: string };
       if (!response.ok || !data.authToken) {
-        if (authMode === 'register' && response.status === 400) throw new Error('Dit account bestaat mogelijk al. Kies Inloggen.');
+        const apiMessage = data.message?.toLowerCase() || '';
+        if (authMode === 'register' && response.status === 400 && (apiMessage.includes('exist') || apiMessage.includes('unique') || apiMessage.includes('already'))) throw new Error('Dit account bestaat al. Kies “Ik heb een account”.');
+        if (authMode === 'register' && response.status === 400) throw new Error('Registreren is niet gelukt. Gebruik een pincode van precies 8 cijfers.');
         if (authMode === 'login' && (response.status === 401 || response.status === 403)) throw new Error('Nog geen account? Kies eerst “Eerste keer registreren”. Heb je al geregistreerd, controleer dan je pincode.');
         throw new Error(data.message || 'De combinatie van e-mailadres en pincode klopt niet.');
       }
@@ -154,8 +156,8 @@ export default function Home() {
             <div className="auth-hint">{authMode === 'register' ? 'Je hebt nog geen account: kies nu zelf je pincode.' : 'Je hebt al geregistreerd: gebruik dezelfde pincode als toen.'}</div>
             <form className="auth-form" onSubmit={authenticate}>
               <label>E-mailadres<input type="email" value={ALLOWED_EMAIL} readOnly /></label>
-              <label>Persoonlijke pincode<div className="pin-field"><LockKeyhole size={19} /><input type="password" inputMode="numeric" autoComplete={authMode === 'register' ? 'new-password' : 'current-password'} maxLength={6} value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="6 cijfers" /></div></label>
-              {authMode === 'register' && <label>Herhaal pincode<div className="pin-field"><ShieldCheck size={19} /><input type="password" inputMode="numeric" autoComplete="new-password" maxLength={6} value={confirmPin} onChange={(event) => setConfirmPin(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="Nogmaals 6 cijfers" /></div></label>}
+              <label>Persoonlijke pincode<div className="pin-field"><LockKeyhole size={19} /><input type="password" inputMode="numeric" autoComplete={authMode === 'register' ? 'new-password' : 'current-password'} maxLength={8} value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, '').slice(0, 8))} placeholder="8 cijfers" /></div></label>
+              {authMode === 'register' && <label>Herhaal pincode<div className="pin-field"><ShieldCheck size={19} /><input type="password" inputMode="numeric" autoComplete="new-password" maxLength={8} value={confirmPin} onChange={(event) => setConfirmPin(event.target.value.replace(/\D/g, '').slice(0, 8))} placeholder="Nogmaals 8 cijfers" /></div></label>}
               {authError && <div className="auth-error" role="alert">{authError}</div>}
               <button className="auth-submit" type="submit" disabled={authBusy}>{authBusy ? 'Even geduld…' : authMode === 'register' ? 'Account aanmaken' : 'BOB openen'}</button>
             </form>
