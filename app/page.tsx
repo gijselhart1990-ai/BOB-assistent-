@@ -7,6 +7,16 @@ const AUTH_BASE = 'https://x8ki-letl-twmt.n7.xano.io/api:vFO3tX2k';
 const ALLOWED_EMAIL = 'gijselhart1990@gmail.com';
 const TOKEN_KEY = 'bob-xano-token';
 
+async function derivePinCredential(pin: string) {
+  if (!window.crypto?.subtle) {
+    throw new Error('Deze browser ondersteunt de beveiligde pincode niet. Gebruik een recente browser.');
+  }
+  const source = new TextEncoder().encode(`BOB-PIN-v1:${ALLOWED_EMAIL}:${pin}`);
+  const digest = await window.crypto.subtle.digest('SHA-256', source);
+  const hex = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return `B${hex}`;
+}
+
 const spaces = [
   { id: 'whatsapp', title: 'WhatsApp', subtitle: 'Slimmer communiceren', icon: MessageCircle, image: '/bob-whatsapp.jpeg' },
   { id: 'mail', title: 'Mail', subtitle: 'Inbox onder controle', icon: Mail, image: '/bob-mail.jpeg' },
@@ -100,9 +110,10 @@ export default function Home() {
     setAuthBusy(true);
     try {
       const endpoint = authMode === 'register' ? 'signup' : 'login';
+      const password = await derivePinCredential(pin);
       const body = authMode === 'register'
-        ? { name: 'Sander Gijselhart', email: ALLOWED_EMAIL, password: pin }
-        : { email: ALLOWED_EMAIL, password: pin };
+        ? { name: 'Sander Gijselhart', email: ALLOWED_EMAIL, password }
+        : { email: ALLOWED_EMAIL, password };
       const response = await fetch(`${AUTH_BASE}/auth/${endpoint}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
       });
@@ -161,7 +172,7 @@ export default function Home() {
               {authError && <div className="auth-error" role="alert">{authError}</div>}
               <button className="auth-submit" type="submit" disabled={authBusy}>{authBusy ? 'Even geduld…' : authMode === 'register' ? 'Account aanmaken' : 'BOB openen'}</button>
             </form>
-            <small className="privacy-note"><ShieldCheck size={15} /> Je pincode wordt veilig via HTTPS verzonden en nooit in deze browser opgeslagen.</small>
+            <small className="privacy-note"><ShieldCheck size={15} /> Je pincode verlaat je browser niet en wordt nergens opgeslagen.</small>
           </>}
         </section>
       </main>
