@@ -19,6 +19,7 @@
     "connect:microsoft": "node scripts/connect-microsoft.js",
     "connect:whatsapp": "node scripts/connect-whatsapp.js",
     "connect:google": "node scripts/connect-google.js",
+    "connect:xano": "node scripts/setup-xano.js",
     "shortcut": "node scripts/make-shortcut.js"
   },
   "dependencies": {
