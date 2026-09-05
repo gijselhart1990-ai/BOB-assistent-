@@ -1,7 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CalendarDays, ChevronRight, CircleUserRound, Globe2, Mail, MessageCircle, Mic, Search, Send, Settings, Sparkles, UsersRound, X } from 'lucide-react';
+import { CalendarDays, ChevronRight, CircleUserRound, Globe2, LockKeyhole, LogOut, Mail, MessageCircle, Mic, Search, Send, Settings, ShieldCheck, Sparkles, UsersRound, X } from 'lucide-react';
+
+const AUTH_BASE = 'https://x8ki-letl-twmt.n7.xano.io/api:vFO3tX2k';
+const ALLOWED_EMAIL = 'gijselhart1990@gmail.com';
+const TOKEN_KEY = 'bob-xano-token';
 
 const spaces = [
   { id: 'whatsapp', title: 'WhatsApp', subtitle: 'Slimmer communiceren', icon: MessageCircle, image: '/bob-whatsapp.jpeg' },
@@ -18,12 +22,36 @@ const replies = [
 ];
 
 export default function Home() {
+  const [authState, setAuthState] = useState<'loading' | 'signed-out' | 'signed-in'>('loading');
+  const [authMode, setAuthMode] = useState<'register' | 'login'>('register');
+  const [pin, setPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authBusy, setAuthBusy] = useState(false);
   const [active, setActive] = useState<(typeof spaces)[number] | null>(null);
   const [command, setCommand] = useState('');
   const [answer, setAnswer] = useState('Goedemiddag Sander. Wat kan ik voor je doen?');
   const [listening, setListening] = useState(false);
 
   useEffect(() => {
+    const token = window.localStorage.getItem(TOKEN_KEY);
+    if (!token) {
+      setAuthState('signed-out');
+      return;
+    }
+    fetch(`${AUTH_BASE}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((response) => {
+        if (!response.ok) throw new Error('Sessie verlopen');
+        setAuthState('signed-in');
+      })
+      .catch(() => {
+        window.localStorage.removeItem(TOKEN_KEY);
+        setAuthState('signed-out');
+      });
+  }, []);
+
+  useEffect(() => {
+    if (authState !== 'signed-in') return;
     const context = (document as Document & { modelContext?: { registerTool: (tool: unknown, options?: { signal?: AbortSignal }) => void | Promise<void> } }).modelContext;
     if (!context?.registerTool) return;
     const lifecycle = new AbortController();
@@ -56,7 +84,50 @@ export default function Home() {
       },
     });
     return () => lifecycle.abort();
-  }, []);
+  }, [authState]);
+
+  async function authenticate(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setAuthError('');
+    if (!/^\d{6}$/.test(pin)) {
+      setAuthError('Kies een pincode van precies 6 cijfers.');
+      return;
+    }
+    if (authMode === 'register' && pin !== confirmPin) {
+      setAuthError('De pincodes zijn niet hetzelfde.');
+      return;
+    }
+    setAuthBusy(true);
+    try {
+      const endpoint = authMode === 'register' ? 'signup' : 'login';
+      const body = authMode === 'register'
+        ? { name: 'Sander Gijselhart', email: ALLOWED_EMAIL, password: pin }
+        : { email: ALLOWED_EMAIL, password: pin };
+      const response = await fetch(`${AUTH_BASE}/auth/${endpoint}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      });
+      const data = await response.json().catch(() => ({})) as { authToken?: string; message?: string };
+      if (!response.ok || !data.authToken) {
+        if (authMode === 'register' && response.status === 400) throw new Error('Dit account bestaat mogelijk al. Kies Inloggen.');
+        throw new Error(data.message || 'De combinatie van e-mailadres en pincode klopt niet.');
+      }
+      window.localStorage.setItem(TOKEN_KEY, data.authToken);
+      setPin('');
+      setConfirmPin('');
+      setAuthState('signed-in');
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : 'Inloggen is niet gelukt. Probeer het opnieuw.');
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  function signOut() {
+    window.localStorage.removeItem(TOKEN_KEY);
+    setAuthState('signed-out');
+    setAuthMode('login');
+    setActive(null);
+  }
 
   function submit() {
     const value = command.trim();
@@ -65,13 +136,41 @@ export default function Home() {
     setCommand('');
   }
 
+  if (authState !== 'signed-in') {
+    return (
+      <main className="auth-shell">
+        <div className="ambient ambient-one" /><div className="ambient ambient-two" />
+        <section className="auth-card" aria-busy={authState === 'loading'}>
+          <div className="auth-orb"><Sparkles size={34} /></div>
+          <span className="eyebrow">BEVEILIGDE TOEGANG</span>
+          <h1>Welkom bij BOB</h1>
+          {authState === 'loading' ? <p className="auth-loading">Je beveiligde sessie wordt gecontroleerd…</p> : <>
+            <p>Registreer eenmalig en kies je persoonlijke pincode. Daarna log je eenvoudig in op iedere standaard internetbrowser.</p>
+            <div className="auth-tabs" role="tablist" aria-label="Registreren of inloggen">
+              <button className={authMode === 'register' ? 'active' : ''} onClick={() => { setAuthMode('register'); setAuthError(''); }}>Registreren</button>
+              <button className={authMode === 'login' ? 'active' : ''} onClick={() => { setAuthMode('login'); setAuthError(''); }}>Inloggen</button>
+            </div>
+            <form className="auth-form" onSubmit={authenticate}>
+              <label>E-mailadres<input type="email" value={ALLOWED_EMAIL} readOnly /></label>
+              <label>Persoonlijke pincode<div className="pin-field"><LockKeyhole size={19} /><input type="password" inputMode="numeric" autoComplete={authMode === 'register' ? 'new-password' : 'current-password'} maxLength={6} value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="6 cijfers" /></div></label>
+              {authMode === 'register' && <label>Herhaal pincode<div className="pin-field"><ShieldCheck size={19} /><input type="password" inputMode="numeric" autoComplete="new-password" maxLength={6} value={confirmPin} onChange={(event) => setConfirmPin(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="Nogmaals 6 cijfers" /></div></label>}
+              {authError && <div className="auth-error" role="alert">{authError}</div>}
+              <button className="auth-submit" type="submit" disabled={authBusy}>{authBusy ? 'Even geduld…' : authMode === 'register' ? 'Account aanmaken' : 'BOB openen'}</button>
+            </form>
+            <small className="privacy-note"><ShieldCheck size={15} /> Je pincode wordt veilig via HTTPS verzonden en nooit in deze browser opgeslagen.</small>
+          </>}
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="bob-shell">
       <div className="ambient ambient-one" /><div className="ambient ambient-two" />
       <header className="topbar">
         <button className="brand" onClick={() => setActive(null)} aria-label="Ga naar BOB home"><span className="brand-mark"><Sparkles size={23} /></span><span>BOB</span></button>
         <div className="global-search"><Search size={20} /><span>Zoek in BOB of stel een vraag…</span><kbd>⌘ K</kbd></div>
-        <nav className="top-actions" aria-label="Account"><button aria-label="Zoeken"><Search /></button><button aria-label="Instellingen"><Settings /></button><button className="avatar" aria-label="Profiel"><CircleUserRound /></button></nav>
+        <nav className="top-actions" aria-label="Account"><button aria-label="Zoeken"><Search /></button><button aria-label="Instellingen"><Settings /></button><button className="avatar" aria-label="Profiel"><CircleUserRound /></button><button onClick={signOut} aria-label="Uitloggen" title="Uitloggen"><LogOut /></button></nav>
       </header>
 
       <section className="dashboard" aria-label="BOB dashboard">
