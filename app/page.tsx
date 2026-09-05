@@ -109,6 +109,7 @@ export default function Home() {
       const data = await response.json().catch(() => ({})) as { authToken?: string; message?: string };
       if (!response.ok || !data.authToken) {
         if (authMode === 'register' && response.status === 400) throw new Error('Dit account bestaat mogelijk al. Kies Inloggen.');
+        if (authMode === 'login' && (response.status === 401 || response.status === 403)) throw new Error('Nog geen account? Kies eerst “Eerste keer registreren”. Heb je al geregistreerd, controleer dan je pincode.');
         throw new Error(data.message || 'De combinatie van e-mailadres en pincode klopt niet.');
       }
       window.localStorage.setItem(TOKEN_KEY, data.authToken);
@@ -147,9 +148,10 @@ export default function Home() {
           {authState === 'loading' ? <p className="auth-loading">Je beveiligde sessie wordt gecontroleerd…</p> : <>
             <p>Registreer eenmalig en kies je persoonlijke pincode. Daarna log je eenvoudig in op iedere standaard internetbrowser.</p>
             <div className="auth-tabs" role="tablist" aria-label="Registreren of inloggen">
-              <button className={authMode === 'register' ? 'active' : ''} onClick={() => { setAuthMode('register'); setAuthError(''); }}>Registreren</button>
-              <button className={authMode === 'login' ? 'active' : ''} onClick={() => { setAuthMode('login'); setAuthError(''); }}>Inloggen</button>
+              <button className={authMode === 'register' ? 'active' : ''} onClick={() => { setAuthMode('register'); setAuthError(''); }}>Eerste keer registreren</button>
+              <button className={authMode === 'login' ? 'active' : ''} onClick={() => { setAuthMode('login'); setAuthError(''); }}>Ik heb een account</button>
             </div>
+            <div className="auth-hint">{authMode === 'register' ? 'Je hebt nog geen account: kies nu zelf je pincode.' : 'Je hebt al geregistreerd: gebruik dezelfde pincode als toen.'}</div>
             <form className="auth-form" onSubmit={authenticate}>
               <label>E-mailadres<input type="email" value={ALLOWED_EMAIL} readOnly /></label>
               <label>Persoonlijke pincode<div className="pin-field"><LockKeyhole size={19} /><input type="password" inputMode="numeric" autoComplete={authMode === 'register' ? 'new-password' : 'current-password'} maxLength={6} value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="6 cijfers" /></div></label>
