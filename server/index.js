@@ -6,6 +6,7 @@ import { chatRouter } from './routes/chat.js';
 import { panelsRouter } from './routes/panels.js';
 import { oauthRouter } from './routes/oauth.js';
 import { agentRouter } from './routes/agent.js';
+import { store } from './store.js';
 
 // Eén kapotte connector mag nooit het hele dashboard meenemen.
 // WhatsApp/puppeteer gooit fouten soms buiten elke await om; zonder deze
@@ -40,6 +41,8 @@ app.use('/oauth', oauthRouter);
 app.use(express.static(PUBLIC_DIR, { extensions: ['html'] }));
 app.get('*', (req, res) => res.sendFile(`${PUBLIC_DIR}/index.html`));
 
+await store.initialize();
+
 const server = app.listen(config.port, '127.0.0.1', () => {
   const caps = capabilities();
   const mark = (on) => (on ? '\x1b[32m●\x1b[0m' : '\x1b[90m○\x1b[0m');
@@ -53,7 +56,7 @@ const server = app.listen(config.port, '127.0.0.1', () => {
   ${mark(caps.voice)} Stem (Cartesia)      ${mark(caps.brain)} Brein (Claude)
   ${mark(caps.google)} Google               ${mark(caps.microsoft)} Outlook
   ${mark(caps.todoist)} Todoist              ${mark(caps.whatsapp)} WhatsApp
-  ${mark(caps.social)} Social
+  ${mark(caps.social)} Social                ${mark(caps.xano)} Xano data
 
   Grijs = nog niet ingesteld. Zie INSTALL.md, stap voor stap.
 `);

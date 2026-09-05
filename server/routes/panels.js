@@ -6,6 +6,7 @@ import {
 } from '../connectors/index.js';
 import { invalidate } from '../store.js';
 import { demo } from '../demo.js';
+import { status as xanoStatus } from '../services/xano.js';
 
 export const panelsRouter = express.Router();
 
@@ -26,6 +27,7 @@ panelsRouter.get('/status', guard(async () => ({
     todoist: todoist.configured(),
     whatsapp: whatsapp.configured(),
     social: social.configured(),
+    xano: xanoStatus(),
   },
 })));
 

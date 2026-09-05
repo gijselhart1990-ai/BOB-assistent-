@@ -373,3 +373,15 @@ Die loopt alles langs en zegt per onderdeel wat er mis is.
 
 Poort 4321 al bezet? Zet een andere `PORT=` in `.env`. Vergeet dan niet de
 redirect-URI's bij Google en Microsoft mee te veranderen.
+## Xano koppelen (centrale data-opslag)
+
+1. Open <https://xano.io/ms6t-jyw> en maak of open je Xano-workspace.
+2. Maak de tabel `bob_state` met `key` (text, uniek), `value` (json) en
+   `updated_at` (integer).
+3. Genereer CRUD API's voor die tabel. BOB gebruikt `GET /bob_state`,
+   `POST /bob_state` en `PATCH /bob_state/{id}`.
+4. Kopieer de basis-URL van de API-groep naar `XANO_API_BASE_URL` in `.env`.
+5. Als de endpoints beveiligd zijn, zet het token in `XANO_AUTH_TOKEN`.
+
+BOB synchroniseert alleen geheugen, gesprekken en opdrachtstatus. Google-,
+Microsoft- en WhatsApp-tokens blijven uitsluitend lokaal.

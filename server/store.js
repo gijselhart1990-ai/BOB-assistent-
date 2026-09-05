@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { DATA_DIR } from './config.js';
+import * as xano from './services/xano.js';
 
 const TOKENS_DIR = path.join(DATA_DIR, 'tokens');
 
@@ -11,7 +12,9 @@ function ensure(dir) {
 ensure(DATA_DIR);
 ensure(TOKENS_DIR);
 
-/** Simpele JSON-opslag. Geen database nodig voor één gebruiker op één machine. */
+const CLOUD_KEYS = new Set(['memory', 'missions', 'activity', 'conversation']);
+
+/** Xano is de centrale opslag; JSON blijft een lokale cache voor offline gebruik. */
 export const store = {
   read(name, fallback = null) {
     const file = path.join(DATA_DIR, `${name}.json`);
@@ -25,6 +28,7 @@ export const store = {
   write(name, value) {
     ensure(DATA_DIR);
     fs.writeFileSync(path.join(DATA_DIR, `${name}.json`), JSON.stringify(value, null, 2), 'utf8');
+    if (CLOUD_KEYS.has(name)) xano.queueSave(name, value);
     return value;
   },
   readToken(provider) {
@@ -45,6 +49,26 @@ export const store = {
   clearToken(provider) {
     const file = path.join(TOKENS_DIR, `${provider}.json`);
     if (fs.existsSync(file)) fs.unlinkSync(file);
+  },
+
+  async initialize() {
+    if (!xano.configured()) return { configured: false, synced: false };
+    try {
+      const rows = await xano.readAll();
+      const remote = new Map(rows.map((row) => [String(row.key), row.value]));
+      for (const key of CLOUD_KEYS) {
+        if (remote.has(key)) {
+          fs.writeFileSync(path.join(DATA_DIR, `${key}.json`), JSON.stringify(remote.get(key), null, 2), 'utf8');
+        } else {
+          const local = this.read(key, null);
+          if (local !== null) xano.queueSave(key, local);
+        }
+      }
+      return { configured: true, synced: true };
+    } catch (error) {
+      console.warn(`\x1b[33m[BOB/Xano]\x1b[0m offline; lokale cache actief: ${error.message}`);
+      return { configured: true, synced: false, error: error.message };
+    }
   },
 };
 

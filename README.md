@@ -111,3 +111,19 @@ afvinken, en dat alleen als jij op het vinkje klikt.
   alleen in Chrome en Edge.
 - **Eén Google-account tegelijk.** Voor meerdere accounts: deel hun agenda's
   met het gekoppelde account.
+## Xano data-opslag
+
+BOB gebruikt Xano voor geheugen, opdrachten, activiteit en gesprekken. De lokale
+JSON-bestanden zijn alleen een offline cache; OAuth- en WhatsApp-tokens worden
+nooit naar Xano gekopieerd.
+
+De link `https://xano.io/ms6t-jyw` is een Xano-aanmeldlink en geen API-endpoint.
+Maak in Xano een tabel `bob_state` met de velden `key` (text, uniek), `value`
+(json) en `updated_at` (integer). Genereer daarvoor de lijst-, create- en
+patch-CRUD-endpoints en vul daarna in `.env` in:
+
+```env
+XANO_API_BASE_URL=https://jouw-instance.xano.io/api:jouw-groep
+XANO_AUTH_TOKEN=
+XANO_STATE_ENDPOINT=bob_state
+```

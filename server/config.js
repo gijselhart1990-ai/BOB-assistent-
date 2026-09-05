@@ -41,6 +41,15 @@ export const config = {
     token: process.env.TODOIST_API_TOKEN || '',
   },
 
+  xano: {
+    // ms6t-jyw is de gedeelde aanmeldlink. De API-basis-URL komt uit de
+    // API-groep in de Xano-workspace (bijvoorbeeld .../api:abc123).
+    signupUrl: 'https://xano.io/ms6t-jyw',
+    apiBaseUrl: process.env.XANO_API_BASE_URL || '',
+    authToken: process.env.XANO_AUTH_TOKEN || '',
+    stateEndpoint: process.env.XANO_STATE_ENDPOINT || 'bob_state',
+  },
+
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID || '',
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
@@ -96,6 +105,7 @@ export function capabilities() {
     voice: Boolean(config.cartesia.apiKey && config.cartesia.voiceId),
     brain: Boolean(config.anthropic.apiKey),
     todoist: Boolean(config.todoist.token),
+    xano: Boolean(config.xano.apiBaseUrl),
     google: Boolean(config.google.clientId && config.google.clientSecret),
     // Alleen de client-ID is verplicht: bij de device code flow bestaat er
     // geen secret. Die eisen zou die hele route onbruikbaar maken.
