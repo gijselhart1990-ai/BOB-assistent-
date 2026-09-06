@@ -1,0 +1,16 @@
+node_modules/
+.next/
+out/
+.netlify/
+*.log
+.DS_Store
+bridge/data/
+
+# Alles wat sleutels bevat. De laatste regel is er omdat de env-dokter een
+# reservekopie maakt voordat hij iets wijzigt; zo'n kopie is net zo geheim
+# als het origineel en heeft ooit een repo in geholpen.
+.env
+.env.local
+.env*.local
+.env.oud-*
+*.env.oud-*

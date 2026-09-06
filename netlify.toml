@@ -1,0 +1,24 @@
+# Netlify bouwt de Next.js-app; de officiële plugin regelt de routes,
+# de server-side rendering en de API-routes als functions.
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  # 22 en niet 20: @netlify/blobs eist node >=22.12. Op 20 installeert het wel,
+  # maar met een EBADENGINE-waarschuwing — en Blobs is precies waar de wachtrij
+  # naar je laptop in staat. Daar wil je geen "werkt meestal" hebben.
+  NODE_VERSION = "22"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# De wachtrij naar je laptop en de hartslag staan in Netlify Blobs. Die
+# hoort bij deze site: geen aparte dienst, geen extra sleutel, en niet
+# gebonden aan Xano's snelheidslimiet. Er valt hier niets in te stellen —
+# de plugin zet het aan zodra de code de store gebruikt.
+#
+# De chat-route praat met Claude en kan gereedschap gebruiken; die heeft
+# meer dan de standaard tien seconden nodig. Dat staat als `maxDuration`
+# in de route zelf, want daar leest de plugin het.

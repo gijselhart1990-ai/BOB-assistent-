@@ -1,0 +1,15 @@
+{
+  "name": "bob-bridge",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Draait op je eigen laptop en voert de opdrachten uit die de cloud niet kan.",
+  "scripts": {
+    "start": "node agent.mjs"
+  },
+  "optionalDependencies": {
+    "playwright-core": "^1.49.0",
+    "whatsapp-web.js": "^1.26.0",
+    "qrcode": "^1.5.4"
+  }
+}

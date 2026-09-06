@@ -1,0 +1,7 @@
+# Regeleindes blijven LF, ook op Windows. Zonder dit maakt Git er CRLF van in
+# je werkkopie en zie je later diffs waarin niets inhoudelijk veranderd is.
+* text=auto eol=lf
+
+# Deze moeten CRLF houden, anders werken ze niet als je ze dubbelklikt.
+*.cmd text eol=crlf
+*.bat text eol=crlf

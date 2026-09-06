@@ -1,0 +1,43 @@
+name: Controle
+
+# Netlify weigert een kapotte build ook, maar dan ontdek je het pas bij het
+# publiceren. Dit zegt het al bij de push.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  bouwen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+        env:
+          # De build heeft alleen geldige vormen nodig, geen echte sleutels.
+          NEXT_PUBLIC_SITE_URL: https://voorbeeld.netlify.app
+          BOB_SESSION_SECRET: alleen-om-te-bouwen-nooit-om-mee-in-te-loggen
+          BOB_ALLOWED_EMAILS: ci@voorbeeld.nl
+          XANO_INSTANCE_URL: https://voorbeeld.n7.xano.io
+          XANO_METADATA_TOKEN: ci-token
+          XANO_WORKSPACE_ID: "1"
+
+  geheimen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Zoek naar per ongeluk gecommitte sleutels
+        run: |
+          if grep -rInE 'sk-ant-[A-Za-z0-9_-]{20,}|sk_car_[A-Za-z0-9]{12,}|eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[A-Za-z0-9_-]{40,}' \
+             --exclude-dir=node_modules --exclude-dir=.git --exclude=package-lock.json . ; then
+            echo "::error::Er staat iets in de repo dat op een sleutel lijkt."
+            exit 1
+          fi
+          echo "Schoon."

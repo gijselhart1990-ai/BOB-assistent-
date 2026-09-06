@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["dom", "dom.iterable", "ES2022"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [{ "name": "next" }],
+    "paths": { "@/*": ["./*"] }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  // `next build` typecheckt alles wat hierin valt. Onderhoudsscripts horen daar
+  // niet bij: die draaien los, via tsx of node, en hoeven de deploy niet te
+  // kunnen tegenhouden. `bob-web` staat erbij omdat een uitpakactie ooit een
+  // kopie van het hele project ín het project heeft gezet — dubbele bestanden
+  // botsen dan met elkaar en de foutmelding wijst nergens naar.
+  "exclude": ["node_modules", "bridge", "scripts", "bob-web", "**/bob-web/**"]
+}

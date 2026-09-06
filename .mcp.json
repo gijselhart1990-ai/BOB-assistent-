@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "xano": {
+      "command": "npx",
+      "args": ["-y", "@xano/developer-mcp"]
+    },
+    "netlify": {
+      "command": "npx",
+      "args": ["-y", "@netlify/mcp@latest"],
+      "env": { "NETLIFY_PERSONAL_ACCESS_TOKEN": "${NETLIFY_PERSONAL_ACCESS_TOKEN}" }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": { "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}" }
+    }
+  }
+}
