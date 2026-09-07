@@ -1,6 +1,6 @@
-# BOB
+# BOB 1.0 Foundation
 
-Sanders persoonlijke assistent, als privéwebsite. Eén dashboard voor agenda,
+Sanders persoonlijke assistent en de beveiligde AI-cockpit van Stand Up Zorg. Eén dashboard voor agenda,
 mail, taken, WhatsApp en het web, met een brein dat de vragen begrijpt en een
 stem die antwoordt.
 
@@ -77,6 +77,23 @@ waar hij hoort.
 **Twee grendels.** Een geldige sessie is niet genoeg; je adres moet ook op de
 toegangslijst staan. En een inloglink werkt één keer: hij is tien minuten
 geldig en de tweede klik ketst af.
+
+## Foundation
+
+De repository bevat nu het eerste werkende fundament voor de AI-orchestrator,
+Takenhub, Workflow Builder, Microsoft 365, Google multi-account, SnelStart-
+facturering en Security & logboek. De nieuwe routes gebruiken uitsluitend
+veilige Foundation- of demostatus: er wordt geen echte klantdata toegevoegd en
+geen impactactie automatisch uitgevoerd.
+
+| Document | Inhoud |
+|---|---|
+| [Architectuur](docs/ARCHITECTURE.md) | lagen, kernobjecten en uitvoeringsmodel |
+| [Modules](docs/MODULES.md) | verantwoordelijkheden en grenzen per module |
+| [Workflows](docs/WORKFLOWS.md) | SnelStart, Microsoft, Google en Takenhub |
+| [Security](docs/SECURITY.md) | approvals, OAuth, autorisatie en audit |
+| [Roadmap](docs/ROADMAP.md) | fasering van Foundation naar pilot |
+| [Deployment](docs/DEPLOYMENT.md) | GitHub/Vercel-straat en controles |
 
 ## Aan de slag
 

@@ -15,7 +15,7 @@
     "bridge": "node bridge/agent.mjs",
     "env": "node scripts/env-doctor.mjs",
     "xano": "node scripts/xano-tabellen.mjs",
-    "test": "tsx scripts/test-sessie.ts",
+    "test": "node --import tsx scripts/test-sessie.ts && node --import tsx scripts/test-foundation.ts",
     "verify": "npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {

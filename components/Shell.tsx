@@ -38,6 +38,10 @@ const PLAATSHOUDER: Record<string, string> = {
   '/google': 'Zoek in Gmail, Agenda of vraag Bob iets…',
   '/social': 'Zoek in je social media, vraag Bob of typ opdracht…',
   '/web': 'Zoek een website of vraag iets aan Bob…',
+  '/taken': 'Zoek of maak een taak…',
+  '/administratie': 'Vraag BOB over facturen of administratie…',
+  '/workflows': 'Zoek of ontwerp een workflow…',
+  '/security': 'Zoek in beveiliging en auditlog…',
   '/instellingen': 'Zoek in Bob of stel een vraag…',
 };
 
@@ -49,6 +53,10 @@ const NAV = [
   { pad: '/google', label: 'Google Workspace', kleur: '#4285f4', ico: <Ico.google />, badge: 'gmail' },
   { pad: '/social', label: 'Social Media', kleur: '#8b5cf6', ico: <Ico.social /> },
   { pad: '/web', label: 'Web Assistent', kleur: '#1a9464', ico: <Ico.web /> },
+  { pad: '/taken', label: 'Takenhub', kleur: '#0ea5e9', ico: <Ico.taken /> },
+  { pad: '/administratie', label: 'Administratie', kleur: '#f59e0b', ico: <Ico.factuur /> },
+  { pad: '/workflows', label: 'Workflows', kleur: '#7c3aed', ico: <Ico.workflow /> },
+  { pad: '/security', label: 'Security & logboek', kleur: '#dc2626', ico: <Ico.schild /> },
 ];
 
 export function Shell({ email, children }: { email: string; children: React.ReactNode }) {

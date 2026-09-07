@@ -9,6 +9,7 @@ import { useBob, } from '@/components/Shell';
 import { stapTekst } from '@/components/BobRail';
 import { hhmm, dagenTussen, naarDatumVeld, alleenDatum } from '@/lib/client';
 import { haal } from '@/lib/client';
+import { FoundationOverview } from '@/components/FoundationOverview';
 
 /* ============================================================
    Het hoofdscherm: panelen links en rechts, het netwerkhoofd in
@@ -50,6 +51,8 @@ export default function Vandaag() {
           </p>
         </div>
       </div>
+
+      <FoundationOverview />
 
       <div className="stage">
         {/* ---------- links ---------- */}
