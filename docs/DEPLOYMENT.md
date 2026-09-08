@@ -33,3 +33,13 @@ De eerder genoemde Vercel-site is niet door een build gecontroleerd of aangepast
 Voor herstel: rol de applicatie terug naar de laatst gevalideerde commit en
 controleer opslagcompatibiliteit. Deze onderhoudsbranch migreert geen bestaande
 opslagsleutels. Bewaar secrets buiten versiebeheer; roteer volgens SLEUTELS.md.
+
+## Preview-isolatie
+
+Preview- en branch-deployments krijgen automatisch een eigen Blobs-namespace.
+Bestaande productieopdrachten, inloglinks en tellers worden niet gedeeld.
+Externe integraties (inclusief Xano en de mailer) zijn in previews standaard
+uitgeschakeld. Gebruik eerst de inlogcode om de interface te testen. Stel pas
+`BOB_PREVIEW_INTEGRATIONS=enabled` in na configuratie van aparte testaccounts.
+Een geldige BOB_SESSION_SECRET, BOB_ALLOWED_EMAILS en BOB_LOGIN_CODE blijven
+vereist; vul nieuwe credentials zelf in de hostinginterface in.

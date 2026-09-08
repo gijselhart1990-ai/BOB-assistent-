@@ -5,10 +5,24 @@ import { getStore } from '@netlify/blobs';
 import { beslissing, internPad } from '../lib/validation';
 import { publiekAdres, controleerDoel } from '../lib/web/fetch-public';
 import { requiresApproval } from '../lib/foundation/policy';
+import { deploymentConfiguratie, opslagOmgeving } from '../lib/deployment';
 
 process.env.BOB_SESSION_SECRET = 'test-secret-met-minstens-tweeendertig-tekens';
 process.env.NETLIFY_SITE_ID = '00000000-0000-4000-8000-000000000000';
 process.env.NETLIFY_AUTH_TOKEN = 'test-only';
+
+test('preview isoleert opslag en erft geen externe productieverbindingen', () => {
+  const bron = { VERCEL_ENV: 'preview', VERCEL_GIT_COMMIT_REF: 'test-branch', XANO_METADATA_TOKEN: 'production-placeholder', RESEND_API_KEY: 'mailer-placeholder', BOB_SESSION_SECRET: 'session-placeholder' };
+  const config = deploymentConfiguratie(bron);
+  assert.equal(config.XANO_METADATA_TOKEN, '');
+  assert.equal(config.RESEND_API_KEY, '');
+  assert.equal(config.BOB_SESSION_SECRET, bron.BOB_SESSION_SECRET);
+  assert.equal(bron.XANO_METADATA_TOKEN, 'production-placeholder');
+  assert.equal(opslagOmgeving(bron), 'test-branch');
+  assert.equal(opslagOmgeving({ VERCEL_ENV: 'production' }), null);
+  assert.equal(deploymentConfiguratie({ ...bron, VERCEL_ENV: 'production' }).XANO_METADATA_TOKEN, bron.XANO_METADATA_TOKEN);
+  assert.equal(deploymentConfiguratie({ ...bron, BOB_PREVIEW_INTEGRATIONS: 'enabled' }).XANO_METADATA_TOKEN, bron.XANO_METADATA_TOKEN);
+});
 
 test('inloggen verwijst uitsluitend naar interne paden', () => {
   for (const pad of ['https://evil.example', '//evil.example', '/\\evil.example', '/\t/evil.example', null]) assert.equal(internPad(pad), '/');

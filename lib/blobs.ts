@@ -1,7 +1,11 @@
 import { getStore, type Store } from '@netlify/blobs';
+import { createHash } from 'node:crypto';
+import { opslagOmgeving } from './deployment';
 
 const winkels = new Map<string, Store>();
 function winkel(naam: string): Store {
+  const omgeving = opslagOmgeving(process.env);
+  if (omgeving) naam = `preview-${createHash('sha256').update(omgeving).digest('hex').slice(0, 16)}-${naam}`;
   let store = winkels.get(naam);
   if (!store) {
     const siteID = process.env.NETLIFY_SITE_ID;
