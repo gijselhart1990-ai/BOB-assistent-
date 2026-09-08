@@ -162,5 +162,3 @@ via **Koppelen** — één QR-code scannen, daarna onthoudt hij het.
 > `%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup`.
 
 ---
-
-
