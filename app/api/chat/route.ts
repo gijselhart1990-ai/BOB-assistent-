@@ -89,13 +89,14 @@ export async function POST(req: Request) {
     // Wacht op opslag voordat de serverless functie stopt. Het antwoord blijft
     // beschikbaar als opslag faalt, maar de client krijgt de opslagstatus mee.
     const nu = Date.now();
-    const opgeslagen = await Promise.all([
+    const opslagResultaten = await Promise.allSettled([
       maak('berichten', { gebruiker: sleutel, rol: 'user', inhoud: vraag, aangemaakt: nu }),
       maak('berichten', {
         gebruiker: sleutel, rol: 'assistant', inhoud: antwoord.text,
         stappen: JSON.stringify(antwoord.steps ?? []), aangemaakt: nu + 1,
       }),
-    ]).then(() => true, () => false);
+    ]);
+    const opgeslagen = opslagResultaten.every(resultaat => resultaat.status === 'fulfilled');
 
     return json({ ok: true, text: antwoord.text, steps: antwoord.steps, usage: antwoord.usage, opgeslagen });
   } catch (err) { return fout(err); }
