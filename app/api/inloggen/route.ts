@@ -5,6 +5,7 @@ import { staatOpLijst } from '@/lib/auth';
 import { kanMailen, stuurInlogLink } from '@/lib/mail';
 import { maakInlogToken, maakSessie, cookieNaam, cookieOpties } from '@/lib/session';
 import { teVaak } from '@/lib/blobs';
+import { internPad } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => ({}));
     const email = String(body?.email || '').trim().toLowerCase();
     const code = String(body?.code || '');
-    const verder = String(body?.verder || '/');
+    const verder = internPad(body?.verder);
 
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
       return json({ ok: false, error: 'Vul een geldig e-mailadres in.' }, { status: 400 });

@@ -1,3 +1,10 @@
+# Actuele runtimevoorwaarde
+
+Gebruik Node.js 22.12 of hoger. Inlogbeveiliging en bridge vereisen ook lokaal
+duurzame Blobs-opslag. Zie [Deployment](docs/DEPLOYMENT.md) voor de actuele
+Netlify/Vercel-instellingen; onderstaande uitgebreide setup is historisch
+op Netlify gericht.
+
 # BOB opzetten — van niets naar een werkende privésite
 
 Reken op **een uur** voor stap 1 t/m 6; dan staat de site en kun je inloggen.

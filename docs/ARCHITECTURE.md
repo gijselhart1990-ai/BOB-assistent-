@@ -1,52 +1,59 @@
-# BOB 1.0 Foundation — architectuur
+# Architectuur
 
-## Doel
-
-BOB is de beveiligde cockpit van Stand Up Zorg: één plek om opdrachten te geven, context uit gekoppelde systemen te lezen, controleerbare plannen te maken en acties pas na expliciete goedkeuring uit te voeren.
-
-## Logische lagen
+## Huidige implementatie
 
 ```mermaid
 flowchart TD
-  UI[Dashboard, tekst en push-to-talk] --> ORCH[AI-orchestrator]
-  ORCH --> CONTEXT[Context & knowledge hub]
-  ORCH --> FLOW[Workflow engine]
-  FLOW --> POLICY[Policy & Approval Hub]
-  POLICY --> CONNECT[Connector manager]
-  CONNECT --> SOURCES[Microsoft 365, Google, SnelStart en overige bronnen]
-  POLICY --> AUDIT[Auditlog & monitoring]
+  UI[Next.js dashboard] --> API[API-routes: authenticatie en validatie]
+  API --> AI[AI en tools]
+  API --> CONNECT[Provideradapters]
+  AI --> CONNECT
+  CONNECT --> XANO[Xano: tokens, berichten, instellingen]
+  API --> BLOBS[Netlify Blobs: inlogbeveiliging en wachtrij]
+  AI --> BLOBS
+  LAPTOP[Laptopbridge: browser en WhatsApp] --> BLOBS
 ```
 
-1. **Ervaring:** Next.js-dashboard met modules, BOB-paneel, tekstinput en later push-to-talk.
-2. **Orchestratie:** intent herkennen, ontbrekende informatie signaleren, plan maken, geschikte workflow en connector kiezen.
-3. **Workflow:** versieerbare stappen met input, output, foutstatus, retry en goedkeuringsmomenten.
-4. **Policy:** least privilege, risiconiveau, expliciet akkoord en deny-by-default.
-5. **Connectors:** één uniforme adapter per extern systeem; OAuth-tokens blijven server-side.
-6. **Data:** PostgreSQL voor metadata, workflows, taken en audit. Brondata blijft zo veel mogelijk in het bronsysteem.
-7. **Uitvoering:** korte API-acties op Vercel; langdurige taken via een persistente worker en event/queue-mechanisme.
+- app bevat routes; components bevat gedeelde interface.
+- lib bevat domeinlogica, authenticatie, provideradapters en opslagtoegang.
+- lib/foundation bevat moduledefinities en plannen, zonder uitvoerende workflowengine.
+- bridge is een apart laptopproces met eigen afhankelijkheden.
+- tests bevat regressietests; scripts bevat beheertaken.
 
-## Kernobjecten
+De app is een modulair monoliet voor persoonlijk gebruik. De gebruikerssleutel
+is een e-mailadres. Dit is geen volwaardig organisatiemodel of tenantisolatie.
 
-- `User`, `Organisation`, `Membership` en `Role`
-- `Connection` en `ExternalAccount`
-- `Task`, `TaskSource` en `TaskLink`
-- `WorkflowDefinition`, `WorkflowVersion`, `WorkflowRun` en `WorkflowStepRun`
-- `ApprovalRequest` en `ApprovalDecision`
-- `Conversation`, `Intent`, `Plan` en `ToolCall`
-- `AuditEvent`, `SecurityPolicy` en `RetentionRule`
+## Opslag en uitvoering
 
-Elke externe verwijzing bevat minimaal `provider`, `connection_id`, `external_id`, `organisation_id` en `last_synced_at`. Daarmee blijven accounts en organisaties strikt gescheiden.
+Xano wordt via de Metadata API gebruikt. Updates nemen de bestaande rij mee:
+PUT vervangt een record. Verzoeken hebben een tijdslimiet; transacties en
+concurrente upserts zijn daarmee nog niet opgelost.
 
-## Uitvoeringsregel
+Blobs is duurzame opslag met strong consistency. Eenmalige inloglinks gebruiken
+onlyIfNew. Wachtrijclaims en beslissingen gebruiken een ETag-vergelijking;
+twee gelijktijdige updates kunnen elkaar zo niet stil overschrijven. Een
+opslagstoring is een fout, geen toestemming of succesvolle mutatie.
 
-Lezen en samenvatten mag binnen toegekende scopes. Versturen, wijzigen, verwijderen, plannen, publiceren, factureren en betalen is standaard geblokkeerd tot een geldige `ApprovalDecision` bestaat voor precies die actie en payload.
+De queue claimt maximaal eenmaal. Na een crash tijdens een browseractie is de
+uitkomst mogelijk onzeker; voer zo'n actie niet automatisch opnieuw uit.
+Een toekomstige worker vereist idempotency en expliciete herstelstatussen.
 
-## Foundation-code
+## Beveiligingsgrenzen
 
-- `lib/foundation/modules.ts`: centrale modulecatalogus.
-- `lib/foundation/policy.ts`: eerste afdwingbare goedkeuringsregel.
-- `lib/foundation/orchestrator.ts`: minimaal plancontract.
-- `lib/foundation/workflows.ts`: eerste workflowdefinities.
-- `app/api/foundation/route.ts`: machineleesbare Foundation-status.
+Middleware controleert sessies; routes controleren ook de toegangslijst.
+Bridge-tokens zijn gehasht opgeslagen en vereisen een nog toegestane gebruiker.
+Weblezers controleren openbare IP-adressen, redirects en responsomvang; DNS
+wordt voor de verbinding vastgezet. De laptopbrowser heeft een afzonderlijk
+netwerk- en interactiebeleid dat bij live acceptatie moet worden beoordeeld.
 
-Dit is bewust een veilig fundament. Productiedata, echte SnelStart-mutaties en autonome impactacties zijn nog niet geactiveerd.
+## Hosting
+
+Netlify kan Blobs automatisch beschikbaar maken. Buiten Netlify zijn
+NETLIFY_SITE_ID en NETLIFY_AUTH_TOKEN op de server vereist. Zonder die opslag
+werken inlogbeveiliging en bridge niet. Zie DEPLOYMENT.md.
+
+## Doelarchitectuur
+
+PostgreSQL, organisaties/rollen, auditlog, persistente workers en visuele
+workflowversies zijn roadmaponderdelen. Ze zijn geen bestaande runtime-
+afhankelijkheden en vereisen een afzonderlijke migratie met acceptatietests.

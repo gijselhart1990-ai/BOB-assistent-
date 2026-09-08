@@ -1,38 +1,35 @@
-# GitHub en Vercel
+# Deployment en beheer
 
-## Productiestraat
+## Voorwaarden
 
-`feature branch → pull request → GitHub Actions → review → main → Vercel production`
+Gebruik Node.js 22.12 of hoger, npm ci en npm run build. De production branch
+is main; wijzigingen worden eerst in een pull request gecontroleerd.
+Een geslaagde build bewijst nog geen werkende live koppelingen.
 
-Vercel-project: `gijselhart1990-ai/bob-assistent`  
-Productie: `https://bob-assistent.vercel.app/`
+## Netlify
 
-## Vercel-instellingen
+netlify.toml configureert Next.js en Node 22. Netlify Blobs wordt automatisch
+gekoppeld in de Netlify-runtime. Zet secrets uitsluitend in de serveromgeving.
 
-- Framework preset: Next.js.
-- Install command: `npm ci`.
-- Build command: `npm run build`.
-- Node.js: 20 of hoger.
-- Production branch: `main`.
-- Preview deployments voor pull requests.
+## Vercel of lokaal
 
-Zet runtimegeheimen in Vercel Environment Variables, gescheiden voor Development, Preview en Production. Gebruik nooit echte sleutels in GitHub, `.env.example`, screenshots of chatberichten.
+Next.js kan hier draaien, maar Blobs wordt niet automatisch geconfigureerd.
+Stel NETLIFY_SITE_ID en NETLIFY_AUTH_TOKEN server-side in voor een geschikte
+Netlify-site. Gebruik gescheiden sites voor test en productie. Het token is
+gevoelig en mag nooit NEXT_PUBLIC_ krijgen of in git worden opgeslagen.
 
-## Verificatie vóór merge
+Zonder werkende opslag weigert de inlogbeveiliging verzoeken en kan de bridge
+geen opdrachten opslaan. Er is geen onbeveiligde lokale fallback.
+De eerder genoemde Vercel-site is niet door een build gecontroleerd of aangepast.
 
-```bash
-npm ci
-npm run typecheck
-npm test
-npm run build
-```
+## Vrijgave
 
-De GitHub-workflow voert dezelfde controles uit. Een succesvolle push naar `main` triggert de bestaande Vercel-koppeling. Controleer daarna deploymentstatus en `/api/health`.
+1. npm ci en npm run verify; controleer GitHub Actions.
+2. Stel site-URL, sessiegeheim, toegangslijst, Blobs en Xano in.
+3. Configureer alleen benodigde providers en bestaande scopes.
+4. Voer TASK-003 uit op testaccounts, inclusief uitval en herstel.
+5. Merge en publiceer pas na beoordeling van de concrete wijzigingen.
 
-## Vercel-plugin
-
-De ontwikkelplugin is geïnstalleerd met `npx plugins add vercel/vercel-plugin`. De agentomgeving moet na installatie opnieuw worden gestart om de commando's en deploymenttools in een nieuwe sessie te laden.
-
-## Migratiepunt
-
-De huidige bridge-wachtrij gebruikt Netlify Blobs. Voor volledige Vercel-productie wordt dit in fase 2 vervangen door een provider-onafhankelijke queue/persistente worker. Tot die migratie blijven bridge- en WhatsApp-browseracties experimenteel; de dashboardfoundation en korte API-routes kunnen wel op Vercel draaien.
+Voor herstel: rol de applicatie terug naar de laatst gevalideerde commit en
+controleer opslagcompatibiliteit. Deze onderhoudsbranch migreert geen bestaande
+opslagsleutels. Bewaar secrets buiten versiebeheer; roteer volgens SLEUTELS.md.

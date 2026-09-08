@@ -1,3 +1,5 @@
+> Dit document beschrijft module- en workflowdoelen. De actuele implementatie en grenzen staan in [MASTER-SPEC.md](MASTER-SPEC.md).
+
 # Modules
 
 ## AI-orchestrator

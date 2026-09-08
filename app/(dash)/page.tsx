@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Ico, KaartKop, NietGekoppeld, Skelet, SchermVoet } from '@/components/ui';
+import { Ico, KaartKop, NietGekoppeld, Skelet } from '@/components/ui';
 import { NetwerkHoofd } from '@/components/NetwerkHoofd';
 import { useApi } from '@/components/hooks';
 import { useBob, } from '@/components/Shell';
@@ -32,7 +32,7 @@ export default function Vandaag() {
   const taken = useApi<any>('/api/todoist');
   const social = useApi<any>('/api/social');
   const wa = useApi<any>('/api/whatsapp');
-  const agenda = useApi<any>(`/api/agenda?offset=${offset}`, [offset]);
+  const agenda = useApi<any>(`/api/agenda?offset=${offset}`);
 
   const { vraag, gesprek, bezig } = useBob();
 

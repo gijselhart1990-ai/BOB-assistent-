@@ -50,6 +50,7 @@ async function api(pad: string, init: RequestInit = {}) {
       ...(init.headers || {}),
     },
     cache: 'no-store',
+    signal: init.signal ?? AbortSignal.timeout(15_000),
   });
 
   const tekst = await res.text();
@@ -119,16 +120,15 @@ export async function maak<T = XanoRecord>(
  * is precies het soort fout dat je pas weken later merkt.
  *
  * Daarom geef je hier altijd de bestaande rij mee: alles wat je niet noemt
- * blijft dan staan. `haalEerst` doet dat voor je als je hem niet bij de hand
- * hebt — dat kost een extra verzoek, maar geen verdwenen gegevens.
+ * blijft dan staan. `werkVeldBij` haalt de bestaande rij eerst op als je die nog niet hebt.
  */
 export async function werkBij<T = XanoRecord>(
   tabel: keyof typeof env.xano.tabellen,
   id: number | string,
   velden: Record<string, unknown>,
-  bestaand?: XanoRecord,
+  bestaand: XanoRecord,
 ): Promise<T> {
-  const volledig = bestaand ? { ...bestaand, ...velden } : velden;
+  const volledig = { ...bestaand, ...velden };
   // De id hoort in het pad, niet in de body.
   const { id: _weg, ...body } = volledig as XanoRecord;
   return await api(`/table/${tabelId(tabel)}/content/${id}`, {

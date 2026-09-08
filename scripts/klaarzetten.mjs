@@ -14,7 +14,7 @@
  * kan ik het hier testen voordat jij het draait.
  */
 
-import { readFileSync, writeFileSync, existsSync, rmSync, copyFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';

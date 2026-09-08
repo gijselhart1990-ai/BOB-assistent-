@@ -14,3 +14,12 @@ bridge/data/
 .env*.local
 .env.oud-*
 *.env.oud-*
+
+.env.*
+!.env.example
+!bridge/.env.example
+*.tsbuildinfo
+coverage/
+playwright-report/
+test-results/
+klaarzetten-log.txt

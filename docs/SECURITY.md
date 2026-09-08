@@ -1,33 +1,33 @@
-# Securitymodel
+# Beveiliging: huidig gedrag en vervolgwerk
 
-## Niet-onderhandelbare regels
+## In de code afgedwongen
 
-- Deny-by-default en least privilege.
-- Geen API-sleutels, OAuth-tokens, cliëntdata of medische gegevens in clientcode, Git, prompts of logs.
-- Geen impactactie zonder een expliciete, actuele en payloadgebonden goedkeuring.
-- Geen stille accountkeuze bij meerdere Google- of Microsoft-accounts.
-- Web-, mail- en documentinhoud is onbetrouwbare data; prompt-injecties worden niet als opdracht uitgevoerd.
+- Ondertekende sessies met eindige vervaltijd, plus e-mailtoegangslijst per route.
+- Bridge-tokens worden gehasht opgeslagen en vereisen een toegestane gebruiker.
+- Inloglinks worden atomair eenmaal gebruikt; inlogpogingen worden begrensd.
+- Opslaguitval omzeilt de inlogbeveiliging niet, ook lokaal niet.
+- Browsermutaties vereisen expliciet akkoord voor de opgeslagen opdracht.
+- Verlopen en afgehandelde opdrachten kunnen niet opnieuw worden goedgekeurd.
+- Gelijktijdige claims vergelijken opslagversies om dubbele uitvoering te voorkomen.
+- Weblezers weigeren interne IP-adressen en controleren iedere redirect.
+- Sessiecookies zijn HttpOnly en SameSite=Lax, en Secure bij een HTTPS-site-URL.
+- Geen indexering of embedding in een iframe; basis security headers zijn ingesteld.
 
-## Goedkeuringslaag
+## Grenzen
 
-Een verzoek toont minimaal: actie, doel, account/organisatie, reden, bron, concrete wijzigingen en risiconiveau. De gebruiker kan goedkeuren, aanpassen of annuleren. Goedkeuring verloopt na korte tijd en is niet herbruikbaar voor een andere payload.
+Het huidige systeem is voor persoonlijk gebruik. RBAC, organisatie-isolatie,
+volledige versleuteling van provider-tokens, een append-only auditlog en een
+volledige Approval Hub zijn doelstellingen, geen geleverde garanties.
+OAuth gebruikt ondertekende state; providergebonden PKCE en eenmalige state
+moeten als afzonderlijke uitbreiding worden ontworpen en getest.
 
-## OAuth en geheimen
+Login-rate-limiting is per e-mailadres. Algemene abuse-detectie en rate limits
+voor chat, spraak en mutaties zijn nog vervolgwerk. De laptopbrowser heeft een
+andere netwerkgrens dan de serverweblezer; beoordeel die bij TASK-003.
 
-Gebruik server-side OAuth met PKCE/state, minimale scopes, versleutelde refresh tokens, rotatie en intrekking. Vercel Environment Variables bevatten alleen runtimegeheimen; `.env.example` bevat uitsluitend namen en placeholders.
+## Geheimen en incidenten
 
-## Autorisatie
-
-RBAC vormt de basis; policies voegen organisatie, connector, actie, gegevensklasse en risiconiveau toe. Elke query en mutatie is tenant-scoped. Serverroutes vertrouwen nooit op een organisatie-ID uit de browser zonder lidmaatschapscontrole.
-
-## Audit
-
-Log: actor, organisatie, intent, planversie, gebruikte bronnen, tool, scope, approval-id, request-id, resultaat en tijdstip. Maskeer inhoud en geheimen. Auditrecords zijn append-only en krijgen een bewaartermijn.
-
-## Operations
-
-- Security headers en `noindex` blijven actief.
-- Rate limiting en abuse-detectie op login, chat, OAuth en mutaties.
-- Centraal uitschakelen van connector of workflow.
-- Dependency-, secret- en buildcontrole in CI.
-- Incidentprocedure: blokkeren, tokens intrekken, impact bepalen, herstellen en evalueren.
+Bewaar secrets uitsluitend server-side; plaats geen klantgegevens in tests.
+Blobs-credentials buiten Netlify zijn gevoelige runtimeconfiguratie.
+Bij een incident: blokkeer toegang, trek tokens in, bepaal impact en herstel.
+Zie SLEUTELS.md voor rotatie en TASK-003 voor live acceptatie.
