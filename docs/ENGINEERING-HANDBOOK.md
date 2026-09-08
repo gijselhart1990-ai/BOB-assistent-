@@ -18,7 +18,7 @@ regressietests en de productiebuild uit. Deze controles vereisen geen echte sleu
 | lib/ai | Modelaanroepen en gereedschappen |
 | lib/foundation | Plan- en modulecontracten; geen productie-workflowengine |
 | lib/web | Publieke webpagina's veilig ophalen en tekst extraheren |
-| lib/blobs.ts, lib/xano.ts | Duurzame opslaggrenzen |
+| lib/storage.ts, lib/xano.ts | Duurzame opslaggrenzen |
 | bridge | Apart laptopproces; eigen afhankelijkheden |
 | tests | Geïsoleerde tests zonder klantgegevens |
 | scripts | Expliciete beheer- en diagnosecommando's |
@@ -33,8 +33,8 @@ URL's en imports zijn onderdeel van het contract.
 
 Een ontbrekend record is iets anders dan onbereikbare opslag. Mutaties en
 inlogbeveiliging falen gesloten bij opslagproblemen. Een optioneel statuspaneel
-mag een expliciete onbeschikbaarstatus tonen. Gebruik ETags voor wijzigingen
-die elkaar kunnen overschrijven en `onlyIfNew` voor eenmalige tokens.
+mag een expliciete onbeschikbaarstatus tonen. Gebruik versietokens voor wijzigingen
+die elkaar kunnen overschrijven en `SET NX` voor eenmalige tokens.
 Strong consistency alleen is geen lock. Retry geen impactactie blind.
 
 JSON-beslissingen accepteren uitsluitend echte booleans en UUID's.

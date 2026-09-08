@@ -4,7 +4,7 @@ import { env } from '@/lib/env';
 import { staatOpLijst } from '@/lib/auth';
 import { kanMailen, stuurInlogLink } from '@/lib/mail';
 import { maakInlogToken, maakSessie, cookieNaam, cookieOpties } from '@/lib/session';
-import { teVaak } from '@/lib/blobs';
+import { teVaak } from '@/lib/storage';
 import { internPad } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';

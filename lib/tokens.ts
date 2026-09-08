@@ -10,7 +10,7 @@ export type OauthToken = {
 
 /**
  * OAuth-tokens staan in Xano, en alleen de server komt erbij. Ze staan
- * bewust niet in Netlify Blobs: dit zijn de sleutels tot je mail en agenda,
+ * bewust niet in de tijdelijke Redis-opslag: dit zijn de sleutels tot je mail en agenda,
  * en die horen in een database die je kunt inzien en opschonen.
  */
 export async function leesToken(email: string, provider: 'google' | 'microsoft'): Promise<OauthToken | null> {

@@ -7,7 +7,7 @@ Doel: bewijzen dat de bestaande code in de echte omgeving werkt.
 
 Acceptatie:
 1. Controleer inloggen, hergebruik van een link, verlopen sessie en intrekken van toegang.
-2. Controleer Blobs-read/write, uitval en herstel; gebruik een afgescheiden testsite.
+2. Controleer Redis-read/write, uitval en herstel; gebruik een afgescheiden testsite.
 3. Koppel Google en Microsoft met de bestaande scopes; controleer tokenverversing.
 4. Start de bridge; controleer heartbeat, lezen, toestaan, weigeren en timeout.
 5. Controleer dat dubbele polls geen dubbele browseractie uitvoeren.

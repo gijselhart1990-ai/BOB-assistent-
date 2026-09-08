@@ -1,15 +1,14 @@
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 import { test, mock } from 'node:test';
-import { getStore } from '@netlify/blobs';
 import { beslissing, internPad } from '../lib/validation';
 import { publiekAdres, controleerDoel } from '../lib/web/fetch-public';
 import { requiresApproval } from '../lib/foundation/policy';
 import { deploymentConfiguratie, opslagOmgeving } from '../lib/deployment';
 
 process.env.BOB_SESSION_SECRET = 'test-secret-met-minstens-tweeendertig-tekens';
-process.env.NETLIFY_SITE_ID = '00000000-0000-4000-8000-000000000000';
-process.env.NETLIFY_AUTH_TOKEN = 'test-only';
+process.env.KV_REST_API_URL = 'https://redis.example.test';
+process.env.KV_REST_API_TOKEN = 'test-only';
 
 test('preview isoleert opslag en erft geen externe productieverbindingen', () => {
   const bron = { VERCEL_ENV: 'preview', VERCEL_GIT_COMMIT_REF: 'test-branch', XANO_METADATA_TOKEN: 'production-placeholder', RESEND_API_KEY: 'mailer-placeholder', BOB_SESSION_SECRET: 'session-placeholder' };
@@ -68,21 +67,30 @@ test('server en middleware weigeren ondertekende ongeldige vervaltijden', async 
 });
 
 test('opslag: eenmalige tokens, gelijktijdige claims, verlopen beslissingen en storingen', async () => {
-  const prototype = Object.getPrototypeOf(getStore({ name: 'test', siteID: process.env.NETLIFY_SITE_ID!, token: process.env.NETLIFY_AUTH_TOKEN! }));
-  const rows = new Map<string, { data: unknown; etag: string }>();
-  let version = 0;
-  mock.method(prototype, 'get', async (key: string) => structuredClone(rows.get(key)?.data ?? null));
-  mock.method(prototype, 'getWithMetadata', async (key: string) => structuredClone(rows.get(key) ?? null));
-  mock.method(prototype, 'setJSON', async (key: string, data: unknown, options: { onlyIfNew?: boolean; onlyIfMatch?: string } = {}) => {
-    const old = rows.get(key);
-    if ((options.onlyIfNew && old) || (options.onlyIfMatch && old?.etag !== options.onlyIfMatch)) return { modified: false };
-    const etag = String(++version);
-    rows.set(key, { data: structuredClone(data), etag });
-    return { modified: true, etag };
+  const rows = new Map<string, string>();
+  let offline = false;
+  mock.method(global, 'fetch', async (_url: unknown, init: RequestInit) => {
+    if (offline) throw new Error('offline');
+    const args = JSON.parse(String(init.body)) as (string | number)[];
+    let result: unknown;
+    const key = String(args[1]);
+    if(args[0] === 'GET') result = rows.get(key) ?? null;
+    else if(args[0] === 'SET') {
+      if(args.includes('NX') && rows.has(key)) result = null;
+      else { rows.set(key, String(args[2])); result = 'OK'; }
+      assert.ok(args.includes('EX'));
+    } else if(args[0] === 'SCAN') result = ['0', [...rows.keys()].filter(k => k.startsWith(String(args[3]).slice(0,-1)))];
+    else if(args[0] === 'EVAL') {
+      const old = rows.get(String(args[3]));
+      const expected = args[4];
+      const matches = expected === '' ? !old : old && JSON.parse(old).versie === expected;
+      result = matches ? 1 : 0;
+      if(matches) rows.set(String(args[3]), String(args[5]));
+    } else throw new Error('Onverwacht commando');
+    return Response.json({result});
   });
-  mock.method(prototype, 'list', async function* () { yield { blobs: [...rows.keys()].map(key => ({ key })) }; });
   try {
-    const { eersteKeer, teVaak, schrijf } = await import('../lib/blobs');
+    const { eersteKeer, teVaak, schrijf } = await import('../lib/storage');
     assert.deepEqual((await Promise.all([eersteKeer('token'), eersteKeer('token')])).sort(), [false, true]);
     assert.deepEqual((await Promise.all([teVaak('limit', 1, 60_000), teVaak('limit', 1, 60_000)])).sort(), [false, true]);
     rows.clear();
@@ -91,7 +99,7 @@ test('opslag: eenmalige tokens, gelijktijdige claims, verlopen beslissingen en s
     const id = '00000000-0000-4000-8000-000000000000';
     const key = `a_example_com/${id}`;
     const job = { id, gebruiker, soort: 'browser_click', invoer: {}, status: 'wacht', bevestigingNodig: true, bevestigd: null, aangemaakt: Date.now(), verlooptOp: Date.now() + 60_000 };
-    await schrijf('queue', key, job);
+    await schrijf('bob-wachtrij', key, job);
     assert.equal(await volgendeJob(gebruiker), null);
     await beantwoordBevestiging(gebruiker, id, true);
     await assert.rejects(beantwoordBevestiging(gebruiker, id, false));
@@ -99,10 +107,10 @@ test('opslag: eenmalige tokens, gelijktijdige claims, verlopen beslissingen en s
     assert.equal(claims.filter(Boolean).length, 1);
     await meldResultaat(gebruiker, id, true, { done: true });
     await assert.rejects(meldResultaat(gebruiker, id, true));
-    await schrijf('queue', key, { ...job, verlooptOp: Date.now() - 1 });
+    await schrijf('bob-wachtrij', key, { ...job, verlooptOp: Date.now() - 1 });
     await assert.rejects(beantwoordBevestiging(gebruiker, id, true));
-    mock.method(prototype, 'setJSON', async () => { throw new Error('offline'); });
+    offline = true;
     await assert.rejects(eersteKeer('new-token'), { status: 503 });
-    await assert.rejects(schrijf('queue', key, job), { status: 503 });
+    await assert.rejects(schrijf('bob-wachtrij', key, job), { status: 503 });
   } finally { mock.restoreAll(); }
 });

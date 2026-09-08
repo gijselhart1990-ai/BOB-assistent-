@@ -15,7 +15,7 @@ npm run dev
 
 Kopieer eerst .env.example naar .env.local en vul de benodigde waarden in.
 De interface kan lokaal starten; inloggen en bridge-functies vereisen duurzame
-Netlify Blobs-opslag, ook buiten Netlify. Gebruik daar een afgescheiden testsite.
+Redis-opslag via Vercel Marketplace. Gebruik een afzonderlijke testdatabase.
 
 ## Controleren
 
@@ -36,14 +36,14 @@ De laptopbridge is een apart Node-project in bridge/.
 | [Architectuur](docs/ARCHITECTURE.md) | Werkelijke lagen en opslag |
 | [Engineering Handbook](docs/ENGINEERING-HANDBOOK.md) | Structuur, ontwikkelen en review |
 | [Taken](tasks/README.md) | Concrete bouw- en acceptatieopdrachten |
-| [Deployment](docs/DEPLOYMENT.md) | Netlify/Vercel en runtimevoorwaarden |
+| [Deployment](docs/DEPLOYMENT.md) | Vercel, Redis en runtimevoorwaarden |
 | [Roadmap](docs/ROADMAP.md) | Toekomstige modules en productievereisten |
 | [Setup](SETUP.md) | Uitgebreide configuratiehandleiding |
 | [Sleutels vervangen](SLEUTELS.md) | Rotatie van credentials |
 
 ## Huidige grenzen
 
-Xano bewaart tokens, berichten en instellingen. Netlify Blobs bewaart de wachtrij,
+Xano bewaart tokens, berichten en instellingen. Redis via Vercel Marketplace bewaart de wachtrij,
 hartslag, gebruikte inloglinks en inlogpogingen. Een laptopproces verzorgt browser
  en WhatsApp; dat werkt alleen als de laptop en bridge beschikbaar zijn.
 

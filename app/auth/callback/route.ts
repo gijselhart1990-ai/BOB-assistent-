@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { staatOpLijst } from '@/lib/auth';
 import { leesInlogToken, maakSessie, cookieNaam, cookieOpties } from '@/lib/session';
-import { eersteKeer } from '@/lib/blobs';
+import { eersteKeer } from '@/lib/storage';
 import { internPad } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';

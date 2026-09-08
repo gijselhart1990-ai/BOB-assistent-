@@ -1,7 +1,7 @@
 # Werken aan BOB
 
 Lees README.md, docs/ARCHITECTURE.md en docs/ENGINEERING-HANDBOOK.md.
-De huidige implementatie is een persoonlijke Next.js-app met Xano en Netlify Blobs.
+De huidige implementatie is een persoonlijke Next.js-app met Xano en Redis via Vercel Marketplace.
 De roadmap beschrijft toekomstwerk, geen bestaande productiemogelijkheden.
 
 - Nederlands in interface, documentatie en commits.

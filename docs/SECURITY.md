@@ -28,6 +28,6 @@ andere netwerkgrens dan de serverweblezer; beoordeel die bij TASK-003.
 ## Geheimen en incidenten
 
 Bewaar secrets uitsluitend server-side; plaats geen klantgegevens in tests.
-Blobs-credentials buiten Netlify zijn gevoelige runtimeconfiguratie.
+Redis-credentials zijn gevoelige runtimeconfiguratie en horen uitsluitend op de server.
 Bij een incident: blokkeer toegang, trek tokens in, bepaal impact en herstel.
 Zie SLEUTELS.md voor rotatie en TASK-003 voor live acceptatie.

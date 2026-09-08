@@ -9,7 +9,7 @@ flowchart TD
   API --> CONNECT[Provideradapters]
   AI --> CONNECT
   CONNECT --> XANO[Xano: tokens, berichten, instellingen]
-  API --> BLOBS[Netlify Blobs: inlogbeveiliging en wachtrij]
+  API --> BLOBS[Redis via Vercel Marketplace: inlogbeveiliging en wachtrij]
   AI --> BLOBS
   LAPTOP[Laptopbridge: browser en WhatsApp] --> BLOBS
 ```
@@ -29,8 +29,8 @@ Xano wordt via de Metadata API gebruikt. Updates nemen de bestaande rij mee:
 PUT vervangt een record. Verzoeken hebben een tijdslimiet; transacties en
 concurrente upserts zijn daarmee nog niet opgelost.
 
-Blobs is duurzame opslag met strong consistency. Eenmalige inloglinks gebruiken
-onlyIfNew. Wachtrijclaims en beslissingen gebruiken een ETag-vergelijking;
+Redis bewaart tijdelijke records met een vervaltijd. Eenmalige inloglinks gebruiken
+SET NX. Wachtrijclaims en beslissingen gebruiken een versietoken-vergelijking;
 twee gelijktijdige updates kunnen elkaar zo niet stil overschrijven. Een
 opslagstoring is een fout, geen toestemming of succesvolle mutatie.
 
@@ -48,9 +48,9 @@ netwerk- en interactiebeleid dat bij live acceptatie moet worden beoordeeld.
 
 ## Hosting
 
-Netlify kan Blobs automatisch beschikbaar maken. Buiten Netlify zijn
-NETLIFY_SITE_ID en NETLIFY_AUTH_TOKEN op de server vereist. Zonder die opslag
-werken inlogbeveiliging en bridge niet. Zie DEPLOYMENT.md.
+Vercel host de Next.js-app. Upstash Redis wordt via Vercel Marketplace gekoppeld
+met KV_REST_API_URL en KV_REST_API_TOKEN (of de UPSTASH_REDIS_REST-varianten).
+Zonder die opslag werken inlogbeveiliging en bridge niet. Zie DEPLOYMENT.md.
 
 ## Doelarchitectuur
 

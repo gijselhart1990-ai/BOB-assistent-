@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import { lees, schrijf, wis, sleutels, wijzig } from '@/lib/blobs';
+import { lees, schrijf, wis, sleutels, wijzig } from '@/lib/storage';
 
 /**
  * De brug naar je laptop.
  *
- * Netlify draait in een datacenter en kan geen browservenster openen of
+ * Vercel draait in een datacenter en kan geen browservenster openen of
  * WhatsApp Web aansturen. Je laptop kan dat wel, maar is van buitenaf niet
  * bereikbaar: router, firewall, wisselend IP.
  *
@@ -12,9 +12,8 @@ import { lees, schrijf, wis, sleutels, wijzig } from '@/lib/blobs';
  * vraagt elke seconde of er werk is, voert het uit en schrijft het antwoord
  * terug. Geen open poort, niets te configureren op je router.
  *
- * Dit staat in Netlify Blobs en niet in Xano: een pollende laptop maakt zo
- * veel verzoeken dat Xano's gratis limiet (tien per twintig seconden) er
- * binnen een seconde doorheen is.
+ * Redis bewaart deze tijdelijke opdrachten en hartslag. Zo belast het
+ * regelmatige pollen niet de database voor berichten en provider-tokens.
  */
 
 const WACHTRIJ = 'bob-wachtrij';
