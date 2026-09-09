@@ -23,6 +23,26 @@ test('preview isoleert opslag en erft geen externe productieverbindingen', () =>
   assert.equal(deploymentConfiguratie({ ...bron, BOB_PREVIEW_INTEGRATIONS: 'enabled' }).XANO_METADATA_TOKEN, bron.XANO_METADATA_TOKEN);
 });
 
+test('AI-testsleutel activeert alleen AI en wordt niet gebruikt in productie', () => {
+  const bron = {
+    VERCEL_ENV: 'preview', ANTHROPIC_API_KEY: 'production-placeholder',
+    ANTHROPIC_BASE: 'https://proxy.example.test', ANTHROPIC_MODEL: 'production-model',
+    BOB_PREVIEW_ANTHROPIC_API_KEY: ' test-only ', BOB_PREVIEW_ANTHROPIC_MODEL: 'test-model',
+    XANO_METADATA_TOKEN: 'production-placeholder', GOOGLE_CLIENT_SECRET: 'production-placeholder',
+    RESEND_API_KEY: 'production-placeholder',
+  };
+  const config = deploymentConfiguratie(bron);
+  assert.equal(config.ANTHROPIC_API_KEY, 'test-only');
+  assert.equal(config.ANTHROPIC_BASE, 'https://api.anthropic.com');
+  assert.equal(config.ANTHROPIC_MODEL, 'test-model');
+  for (const naam of ['XANO_METADATA_TOKEN', 'GOOGLE_CLIENT_SECRET', 'RESEND_API_KEY']) assert.equal(config[naam], '');
+  for (const key of [undefined, '', '  ']) {
+    assert.equal(deploymentConfiguratie({ ...bron, BOB_PREVIEW_ANTHROPIC_API_KEY: key }).ANTHROPIC_API_KEY, '');
+  }
+  assert.equal(deploymentConfiguratie({ ...bron, VERCEL_ENV: 'production' }).ANTHROPIC_API_KEY, 'production-placeholder');
+  assert.equal(bron.ANTHROPIC_API_KEY, 'production-placeholder');
+});
+
 test('inloggen verwijst uitsluitend naar interne paden', () => {
   for (const pad of ['https://evil.example', '//evil.example', '/\\evil.example', '/\t/evil.example', null]) assert.equal(internPad(pad), '/');
   assert.equal(internPad('/mail?tab=nieuw'), '/mail?tab=nieuw');

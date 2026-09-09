@@ -31,6 +31,15 @@ met export/import en controle op aantallen en eigenaarschap.
 
 ## Inloggen en testen
 
+Voor alleen AI: voeg BOB_PREVIEW_ANTHROPIC_API_KEY als Secret toe aan Vercel,
+uitsluitend Preview en de onderhoudsbranch. Gebruik een afzonderlijke Anthropic-
+testsleutel. Laat BOB_PREVIEW_INTEGRATIONS uit. De app gebruikt dan deze testsleutel
+en de directe Anthropic API; alle overige externe koppelingen blijven uit.
+BOB_PREVIEW_ANTHROPIC_MODEL is optioneel (standaard claude-sonnet-5).
+Na opslaan is een nieuwe deploy nodig. Test met een neutrale vraag zonder
+persoonlijke gegevens. Sleutel, modeltoegang en beschikbaar tegoed moeten live
+worden gecontroleerd; unit tests bewijzen geen werkende providerverbinding.
+
 Stel BOB_SESSION_SECRET, BOB_ALLOWED_EMAILS, BOB_LOGIN_CODE en NEXT_PUBLIC_SITE_URL
 uitsluitend voor de testbranch in. Externe integraties zijn in preview standaard
 uitgeschakeld. BOB_PREVIEW_INTEGRATIONS=enabled mag pas na configuratie van testaccounts.

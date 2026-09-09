@@ -11,6 +11,10 @@ export function deploymentConfiguratie(bron: Configuratie): Configuratie {
     for (const naam of Object.keys(config)) {
       if (/^(XANO_|GOOGLE_|MICROSOFT_|TODOIST_|ANTHROPIC_|CARTESIA_|BRAVE_|LINKEDIN_|INSTAGRAM_|FACEBOOK_|TIKTOK_|RESEND_|SENDGRID_)/.test(naam)) config[naam] = '';
     }
+    // Alleen een expliciete testsleutel activeert AI; erf nooit de productie-key of proxy.
+    config.ANTHROPIC_API_KEY = bron.BOB_PREVIEW_ANTHROPIC_API_KEY?.trim() || '';
+    config.ANTHROPIC_MODEL = bron.BOB_PREVIEW_ANTHROPIC_MODEL?.trim() || 'claude-sonnet-5';
+    config.ANTHROPIC_BASE = 'https://api.anthropic.com';
   }
   return config;
 }
