@@ -6,7 +6,7 @@ export default function Workflows() {
     <FoundationPage eyebrow="BOB 1.0 · Automatisering" title="Workflow Builder" intro="Bouw herhaalbare processen uit triggers, controles, acties, goedkeuringen en logging. In Foundation-modus zijn workflows zichtbaar en controleerbaar; impactacties blijven vergrendeld." cards={FOUNDATION_WORKFLOWS.map((workflow) => ({
       title: workflow.name,
       description: `Start: ${workflow.trigger}. De workflow bevat ${workflow.steps} controleerbare stappen.`,
-      meta: 'Versiebeheer en auditspoor inbegrepen',
+      meta: 'Workflowontwerp; uitvoering, versiebeheer en auditlog volgen nog',
       status: workflow.id === 'snelstart-invoice' ? 'Foundation' : 'Gepland',
     }))}>
       <section className="foundation-flow">

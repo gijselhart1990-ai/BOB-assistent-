@@ -142,13 +142,13 @@ export default function Vandaag() {
         <div className="zone zone-center">
           <section className="card card-assistant" id="card-assistent">
             <KaartKop kleur="#f59e0b" icoon={<Ico.vonk />} titel="BOB Assistent" onder="Vraag maar raak"
-              rechts={<span className="pill">klaar</span>} />
+              rechts={<span className="pill">{bezig ? 'bezig' : 'stel een vraag'}</span>} />
             <div className="card-body">
               {gesprek.length === 0 ? (
                 <div className="assistant-hello">
                   <span className="spark">✦</span>
                   <div>
-                    <strong>Hallo Sander, ik ben BOB.</strong>
+                    <strong>Hallo, ik ben BOB.</strong>
                     <p>Vraag me naar je agenda, je mail of je taken. Of laat me iets opzoeken op het web.</p>
                   </div>
                 </div>
@@ -199,9 +199,9 @@ export default function Vandaag() {
             <div className="card-body">
               <div className="app-grid">
                 <Tegel naam="Gmail" kleur="#ea4335" href="https://mail.google.com" ico={<Ico.mail />} aantal={mail.data?.gmail?.unread || 0} gekoppeld={Boolean(mail.data?.gmail?.ok)} />
-                <Tegel naam="Agenda" kleur="#1a73e8" href="https://calendar.google.com" ico={<Ico.agenda />} gekoppeld />
-                <Tegel naam="Drive" kleur="#00ac47" href="https://drive.google.com" ico={<Ico.drive />} gekoppeld />
-                <Tegel naam="Foto's" kleur="#f9ab00" href="https://photos.google.com" ico={<Ico.fotos />} gekoppeld />
+                <Tegel naam="Agenda" kleur="#1a73e8" href="https://calendar.google.com" ico={<Ico.agenda />} snelkoppeling />
+                <Tegel naam="Drive" kleur="#00ac47" href="https://drive.google.com" ico={<Ico.drive />} snelkoppeling />
+                <Tegel naam="Foto's" kleur="#f9ab00" href="https://photos.google.com" ico={<Ico.fotos />} snelkoppeling />
               </div>
             </div>
           </section>
@@ -270,15 +270,15 @@ const MERK: Record<string, React.ReactNode> = {
   tiktok: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M9.5 12.8a3.4 3.4 0 1 0 3.4 3.4V4.2" /><path d="M12.9 6.6a4.6 4.6 0 0 0 4.4 3.3" /></svg>,
 };
 
-function Tegel({ naam, kleur, href, ico, aantal, gekoppeld, intern }: {
-  naam: string; kleur: string; href: string; ico: React.ReactNode; aantal?: number; gekoppeld?: boolean; intern?: boolean;
+function Tegel({ naam, kleur, href, ico, aantal, gekoppeld, intern, snelkoppeling }: {
+  naam: string; kleur: string; href: string; ico: React.ReactNode; aantal?: number; gekoppeld?: boolean; intern?: boolean; snelkoppeling?: boolean;
 }) {
   const inhoud = (
     <>
       {aantal ? <span className="app-badge">{aantal}</span> : null}
       <span className="app-glyph">{ico}</span>
       <span className="app-name">{naam}</span>
-      <span className="app-note">{gekoppeld ? `${aantal ?? 0} nieuw` : 'niet gekoppeld'}</span>
+      <span className="app-note">{snelkoppeling ? 'Openen ↗' : gekoppeld ? `${aantal ?? 0} nieuw` : 'niet gekoppeld'}</span>
     </>
   );
   const stijl = { ['--c' as string]: kleur } as React.CSSProperties;

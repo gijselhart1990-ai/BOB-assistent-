@@ -63,7 +63,7 @@ function Inhoud() {
               </>
             )}
             <p className="rail-tekst" style={{ marginTop: 14 }}>
-              Sleutels staan als omgevingsvariabelen bij Netlify, nooit in de code en nooit in je browser.
+              Sleutels staan als omgevingsvariabelen bij Vercel, nooit in de code en nooit in je browser.
               Wijzigen doe je daar; daarna een nieuwe deploy.
             </p>
           </div>
@@ -74,7 +74,7 @@ function Inhoud() {
             rechts={<span className={`pill${brug.online ? '' : ' muted'}`}>{brug.online ? 'online' : 'offline'}</span>} />
           <div className="card-body">
             <p className="rail-tekst">
-              Netlify draait in een datacenter en kan geen browservenster openen of WhatsApp Web aansturen.
+              Vercel draait in een datacenter en kan geen browservenster openen of WhatsApp Web aansturen.
               Je laptop kan dat wel. Het bridge-programma daar vraagt elke seconde of er werk voor hem is —
               alleen uitgaand verkeer, geen open poort op je router.
             </p>
