@@ -40,5 +40,4 @@ export async function schrijfToken(email: string, provider: 'google' | 'microsof
   });
 }
 
-export const verlopen = (iso?: string | null, margeMs = 60_000) =>
-  !iso || new Date(iso).getTime() - margeMs < Date.now();
+export { verlopen } from './oauth-validation';

@@ -1,7 +1,7 @@
 # TASK-004 — Koppelingen met vaste opslag via Vercel
 
 Status: gratis Neon-database bob-preview-db in Frankfurt aangemaakt en met
-uitsluitend Vercel Preview verbonden. Het eerste Google-account is aangesloten.
+uitsluitend Vercel Preview verbonden. Beide aangewezen Google-accounts zijn aangesloten.
 De twee tabellen uit migrations/001_google_accounts.sql zijn via de Vercel-query-editor
 aangemaakt; beide opdrachten zijn succesvol uitgevoerd. Alleen-lezen is daarna hersteld.
 Opslagadapter, versleuteling, OAuth-opslag en accountkiezer zijn geïmplementeerd
@@ -10,7 +10,7 @@ De preview van commit d343a79 is Ready. De Google-startcontrole bereikt de
 aanmeldpagina. Het aangewezen zakelijke account is na expliciete toestemming
 opgeslagen als testgebruiker. De eerdere access_denied-blokkade is verholpen;
 de gebruiker heeft de Google-toestemming doorlopen. BOB toont het account en
-agendaresultaten. Tokenverversing en koppelen van twee accounts blijven open.
+agendaresultaten. Beide accounts zijn gekoppeld; tokenverversing blijft afzonderlijk te controleren.
 
 ## Besloten
 
@@ -74,9 +74,11 @@ gebruiken. Previewchat werkt zonder blijvende geschiedenis zolang Xano uit staat
 Het aangewezen zakelijke Google-account verschijnt als geselecteerd account in
 BOB. De Google Workspace-pagina toont agendaresultaten en Gmail meldt nul
 ongelezen berichten. Dit bevestigt de eerste koppeling en het teruglezen van
-opgeslagen toegang voor de API-aanroepen. Tokenverversing, behoud na een nieuwe
-deploy en wisselen tussen twee accounts blijven afzonderlijke controles.
-Een tweede accountadres is nog niet aangewezen.
+opgeslagen toegang voor de API-aanroepen. De eerste koppeling bleef behouden na
+deploy b211879. Beide aangewezen accounts zijn nu gekoppeld. Wisselen in beide
+richtingen toont de bijbehorende agendaresultaten. De Gmail-snelkoppeling opent
+voor elk geselecteerd account de juiste inbox. Tokenverversing en AI-context
+bij wisselen blijven afzonderlijk te controleren.
 
 De Gmail- en Agenda-snelkoppelingen gebruiken nu een beveiligde serverroute die
 het geselecteerde eigen account doorgeeft aan Google. Een ontbrekend account

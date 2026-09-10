@@ -3,6 +3,7 @@ import { cached } from '@/lib/cache';
 import { leesToken, schrijfToken, verlopen } from '@/lib/tokens';
 import { gekozenGoogleAccount, meerdereGoogleAccounts } from '@/lib/google-accounts';
 import { googleAccountStore } from '@/lib/google-account-store';
+import { googleToken } from '@/lib/oauth-validation';
 
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
@@ -22,6 +23,7 @@ export function autorisatieUrl(state: string) {
 
 export async function wisselCode(userId: string, code: string) {
   const res = await fetch(TOKEN_URL, {
+    cache: 'no-store', signal: AbortSignal.timeout(15_000), redirect: 'error',
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
@@ -32,8 +34,8 @@ export async function wisselCode(userId: string, code: string) {
       grant_type: 'authorization_code',
     }),
   });
-  if (!res.ok) throw new Error(`Google token ${res.status}: ${(await res.text()).slice(0, 300)}`);
-  const t = await res.json();
+  if (!res.ok) throw new Error(`Google tokenaanvraag mislukt (${res.status}).`);
+  const t = googleToken(await res.json());
   if (meerdereGoogleAccounts()) {
     const identity = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
       headers: { Authorization: `Bearer ${t.access_token}` }, cache: 'no-store',
@@ -44,18 +46,10 @@ export async function wisselCode(userId: string, code: string) {
     if (typeof info.sub !== 'string' || !info.sub || typeof info.email !== 'string' || info.email_verified !== true) {
       throw new Error('Google gaf geen geverifieerd account terug.');
     }
-    await googleAccountStore(userId).save(info.sub, info.email, {
-      access_token: t.access_token, refresh_token: t.refresh_token, scope: t.scope,
-      expires_at: new Date(Date.now() + (t.expires_in ?? 3600) * 1000).toISOString(),
-    });
+    await googleAccountStore(userId).save(info.sub, info.email, t);
     return;
   }
-  await schrijfToken(userId, 'google', {
-    access_token: t.access_token,
-    refresh_token: t.refresh_token,
-    scope: t.scope,
-    expires_at: new Date(Date.now() + (t.expires_in ?? 3600) * 1000).toISOString(),
-  });
+  await schrijfToken(userId, 'google', t);
 }
 
 async function toegang(userId: string) {
@@ -65,6 +59,7 @@ async function toegang(userId: string) {
   if (!t.refresh_token) throw Object.assign(new Error('Google-token verlopen — koppel opnieuw'), { status: 428 });
 
   const res = await fetch(TOKEN_URL, {
+    cache: 'no-store', signal: AbortSignal.timeout(15_000), redirect: 'error',
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
@@ -75,12 +70,8 @@ async function toegang(userId: string) {
     }),
   });
   if (!res.ok) throw new Error(`Google verversen mislukt (${res.status})`);
-  const fresh = await res.json();
-  await schrijfToken(userId, 'google', {
-    ...t,
-    access_token: fresh.access_token,
-    expires_at: new Date(Date.now() + (fresh.expires_in ?? 3600) * 1000).toISOString(),
-  });
+  const fresh = googleToken(await res.json(), t);
+  await schrijfToken(userId, 'google', fresh);
   return fresh.access_token as string;
 }
 

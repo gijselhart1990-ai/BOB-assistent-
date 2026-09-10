@@ -17,8 +17,7 @@ Getest op de afgeschermde Vercel-preview van de onderhoudsbranch.
   Het aangewezen zakelijke account is als testgebruiker opgeslagen. De eerdere
   access_denied-blokkade is verholpen. De gebruiker heeft de Google-toestemming
   doorlopen. BOB toont het account, agendaresultaten en nul ongelezen mails.
-  Tokenverversing en wisselen tussen twee echte accounts zijn nog niet live
-  geverifieerd.
+  Wisselen tussen beide accounts is live bevestigd; tokenverversing blijft open.
 
 Bij de controle zijn verouderde hostingteksten en misleidende statuslabels
 gevonden. De correctie noemt Vercel, markeert modules als in ontwikkeling en
@@ -33,10 +32,22 @@ controles uit TASK-003 uit vóór een productiebeoordeling.
 Het aangewezen zakelijke Google-account verschijnt als geselecteerd account in
 BOB. De Google Workspace-pagina toont agendaresultaten en Gmail meldt nul
 ongelezen berichten. Dit bevestigt de eerste koppeling en het teruglezen van
-opgeslagen toegang voor de API-aanroepen. Tokenverversing, behoud na een nieuwe
-deploy en wisselen tussen twee accounts blijven afzonderlijke controles.
-Een tweede accountadres is nog niet aangewezen.
+opgeslagen toegang voor de API-aanroepen. De eerste koppeling bleef behouden na
+deploy b211879. Beide aangewezen accounts zijn nu gekoppeld. Wisselen in beide
+richtingen toont de bijbehorende agendaresultaten. De Gmail-snelkoppeling opent
+voor elk geselecteerd account de juiste inbox. Tokenverversing en AI-context
+bij wisselen blijven afzonderlijk te controleren.
 
 De Gmail- en Agenda-snelkoppelingen gebruiken nu een beveiligde serverroute die
 het geselecteerde eigen account doorgeeft aan Google. Een ontbrekend account
 geeft in multi-accountmodus een fout, geen stille terugval op een ander account.
+
+## Controle tokenverversing en chat
+
+Regressietests controleren ongeldige/verlopen vervaltijden, behoud en rotatie
+van refresh-tokens en weigering van ongeldige Google-antwoorden vóór opslag.
+Google-tokenverzoeken hebben een time-out en volgen geen redirects.
+De chat weigert in multi-accountmodus een ontbrekende accountselectie en
+slikt fouten bij het ophalen van het account niet meer stil in.
+Dit zijn code- en fictieve-datatests; een echte refresh-aanroep en een AI-antwoord
+met accountgebonden context zijn hiermee nog niet live geaccepteerd.

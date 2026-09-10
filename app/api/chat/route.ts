@@ -8,7 +8,7 @@ import { todoist } from '@/lib/connectors/todoist';
 import { gekozenGoogleAccount, meerdereGoogleAccounts } from '@/lib/google-accounts';
 
 export const dynamic = 'force-dynamic';
-// De tool-lus kan een paar rondes doen; Netlify's standaardlimiet is te krap.
+// De tool-lus kan een paar rondes doen binnen de Vercel-functie.
 export const maxDuration = 120;
 
 const tijd = (iso?: string | null) => {
@@ -63,7 +63,10 @@ export async function POST(req: Request) {
   try {
     const u = await eisGebruiker();
     const eigenaar = sleutelVan(u);
-    const account = meerdereGoogleAccounts() ? await gekozenGoogleAccount(u.id).catch(() => null) : null;
+    const account = meerdereGoogleAccounts() ? await gekozenGoogleAccount(u.id) : null;
+    if (meerdereGoogleAccounts() && !account) {
+      return json({ ok: false, error: 'Kies eerst een gekoppeld Google-account voor dit gesprek.' }, { status: 409 });
+    }
     const sleutel = meerdereGoogleAccounts() ? JSON.stringify([eigenaar, 'google', account?.subject ?? null]) : eigenaar;
 
     const body = await req.json().catch(() => ({}));

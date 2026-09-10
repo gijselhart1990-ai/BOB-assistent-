@@ -6,6 +6,30 @@ import { publiekAdres, controleerDoel } from '../lib/web/fetch-public';
 import { requiresApproval } from '../lib/foundation/policy';
 import { deploymentConfiguratie, opslagOmgeving } from '../lib/deployment';
 import { verzegel, openZegel } from '../lib/account-crypto';
+import { googleToken, verlopen } from '../lib/oauth-validation';
+
+test('OAuth behandelt ongeldige en bijna verlopen toegang als verlopen', () => {
+  for (const value of [null, undefined, '', 'ongeldig', 'Infinity', new Date(Date.now() - 1).toISOString(), new Date(Date.now() + 30_000).toISOString()]) {
+    assert.equal(verlopen(value), true);
+  }
+  assert.equal(verlopen(new Date(Date.now() + 120_000).toISOString()), false);
+});
+
+test('Google-tokenverversing behoudt de refresh-sleutel en verwerkt rotatie', () => {
+  const previous = { access_token: 'old', refresh_token: 'refresh-a', scope: 'read' };
+  const fresh = googleToken({ access_token: 'new', expires_in: 3600 }, previous);
+  assert.equal(fresh.refresh_token, 'refresh-a');
+  assert.equal(fresh.scope, 'read');
+  assert.equal(fresh.access_token, 'new');
+  assert.equal(verlopen(fresh.expires_at), false);
+  assert.equal(googleToken({ access_token: 'new', refresh_token: 'rotated' }, previous).refresh_token, 'rotated');
+  assert.deepEqual(previous, { access_token: 'old', refresh_token: 'refresh-a', scope: 'read' });
+  for (const payload of [null, {}, { access_token: '' }, { access_token: 4 },
+    ...[0, -1, Infinity, NaN, '3600', 1e20].map(expires_in => ({ access_token: 'new', expires_in })),
+    { access_token: 'new', refresh_token: '' }, { access_token: 'new', scope: 123 }]) {
+    assert.throws(() => googleToken(payload, previous));
+  }
+});
 
 test('accounttokens zijn versleuteld en gebonden aan eigenaar en account', () => {
   const key = 'ab'.repeat(32);
