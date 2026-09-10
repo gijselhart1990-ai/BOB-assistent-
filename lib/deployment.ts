@@ -15,6 +15,9 @@ export function deploymentConfiguratie(bron: Configuratie): Configuratie {
     config.ANTHROPIC_API_KEY = bron.BOB_PREVIEW_ANTHROPIC_API_KEY?.trim() || '';
     config.ANTHROPIC_MODEL = bron.BOB_PREVIEW_ANTHROPIC_MODEL?.trim() || 'claude-sonnet-5';
     config.ANTHROPIC_BASE = 'https://api.anthropic.com';
+    config.GOOGLE_CLIENT_ID = bron.BOB_PREVIEW_GOOGLE_CLIENT_ID || '';
+    config.GOOGLE_CLIENT_SECRET = bron.BOB_PREVIEW_GOOGLE_CLIENT_SECRET || '';
+    config.BOB_GOOGLE_STORAGE = 'postgres';
   }
   return config;
 }

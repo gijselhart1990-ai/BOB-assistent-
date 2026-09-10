@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Ico } from '@/components/ui';
 import { haal } from '@/lib/client';
+import { GoogleAccountPicker } from './GoogleAccountPicker';
 
 /* ============================================================
    De schil om elk scherm: balk bovenin, zijbalk, spraak, toasts
@@ -199,6 +200,7 @@ export function Shell({ email, children }: { email: string; children: React.Reac
           <div className="avatar" title={email}><span>{email[0]?.toUpperCase() ?? 'B'}</span><i className="presence" /></div>
         </div>
       </header>
+      <GoogleAccountPicker />
 
       <div className={`shell${ingeklapt ? ' collapsed' : ''}`}>
         <nav className="sidebar">

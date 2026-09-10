@@ -1,6 +1,8 @@
 import { env, redirectUri } from '@/lib/env';
 import { cached } from '@/lib/cache';
 import { leesToken, schrijfToken, verlopen } from '@/lib/tokens';
+import { gekozenGoogleAccount, meerdereGoogleAccounts } from '@/lib/google-accounts';
+import { googleAccountStore } from '@/lib/google-account-store';
 
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
@@ -12,7 +14,7 @@ export function autorisatieUrl(state: string) {
   url.searchParams.set('response_type', 'code');
   url.searchParams.set('scope', env.google.scopes.join(' '));
   url.searchParams.set('access_type', 'offline');
-  url.searchParams.set('prompt', 'consent');
+  url.searchParams.set('prompt', 'consent select_account');
   url.searchParams.set('include_granted_scopes', 'true');
   url.searchParams.set('state', state);
   return url.toString();
@@ -32,6 +34,22 @@ export async function wisselCode(userId: string, code: string) {
   });
   if (!res.ok) throw new Error(`Google token ${res.status}: ${(await res.text()).slice(0, 300)}`);
   const t = await res.json();
+  if (meerdereGoogleAccounts()) {
+    const identity = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
+      headers: { Authorization: `Bearer ${t.access_token}` }, cache: 'no-store',
+      signal: AbortSignal.timeout(15_000), redirect: 'error',
+    });
+    if (!identity.ok) throw new Error('Google-account kon niet worden geverifieerd.');
+    const info = await identity.json();
+    if (typeof info.sub !== 'string' || !info.sub || typeof info.email !== 'string' || info.email_verified !== true) {
+      throw new Error('Google gaf geen geverifieerd account terug.');
+    }
+    await googleAccountStore(userId).save(info.sub, info.email, {
+      access_token: t.access_token, refresh_token: t.refresh_token, scope: t.scope,
+      expires_at: new Date(Date.now() + (t.expires_in ?? 3600) * 1000).toISOString(),
+    });
+    return;
+  }
   await schrijfToken(userId, 'google', {
     access_token: t.access_token,
     refresh_token: t.refresh_token,
@@ -92,7 +110,8 @@ export const google = {
     if (!google.ingesteld()) return { ok: false, reason: 'niet ingesteld' as const, events: [] };
     if (!(await google.gekoppeld(userId))) return { ok: false, reason: 'niet gekoppeld' as const, events: [] };
 
-    return cached(`g:agenda:${userId}:${offset}`, 120_000, async () => {
+    const account = meerdereGoogleAccounts() ? await gekozenGoogleAccount(userId) : null;
+    return cached(`g:agenda:${JSON.stringify([userId, account?.subject, offset])}`, 120_000, async () => {
       const { start, eind } = dagGrenzen(offset);
       const lijst = await api(userId, 'https://www.googleapis.com/calendar/v3/users/me/calendarList?minAccessRole=reader');
       const kalenders = (lijst.items || []).filter((c: any) => c.selected !== false).slice(0, 12);
@@ -133,7 +152,8 @@ export const google = {
     if (!google.ingesteld()) return { ok: false, reason: 'niet ingesteld' as const, unread: 0, messages: [] };
     if (!(await google.gekoppeld(userId))) return { ok: false, reason: 'niet gekoppeld' as const, unread: 0, messages: [] };
 
-    return cached(`g:mail:${userId}`, 90_000, async () => {
+    const account = meerdereGoogleAccounts() ? await gekozenGoogleAccount(userId) : null;
+    return cached(`g:mail:${JSON.stringify([userId, account?.subject])}`, 90_000, async () => {
       const lijst = await api(userId,
         'https://gmail.googleapis.com/gmail/v1/users/me/messages?q=' +
         encodeURIComponent('is:unread in:inbox category:primary') + '&maxResults=8');
@@ -150,7 +170,7 @@ export const google = {
             subject: h.subject || '(geen onderwerp)',
             snippet: d.snippet || '',
             date: h.date || null,
-            link: `https://mail.google.com/mail/u/0/#inbox/${m.id}`,
+            link: account ? `https://mail.google.com/mail/?authuser=${encodeURIComponent(account.email)}#inbox/${m.id}` : `https://mail.google.com/mail/u/0/#inbox/${m.id}`,
           });
         } catch { /* sla dit bericht over */ }
       }

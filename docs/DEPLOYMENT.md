@@ -31,6 +31,29 @@ met export/import en controle op aantallen en eigenaarschap.
 
 ## Inloggen en testen
 
+### Google-accounts in Preview
+
+Stel BOB_PREVIEW_GOOGLE_CLIENT_ID en BOB_PREVIEW_GOOGLE_CLIENT_SECRET uitsluitend
+voor de onderhoudsbranch in. BOB_ACCOUNT_ENCRYPTION_KEY is een aparte willekeurige
+32-byte sleutel als 64 hextekens. Bewaar deze duurzaam: bij vervangen kunnen
+bestaande tokens niet meer worden ontsleuteld en moeten accounts opnieuw koppelen.
+Neon levert DATABASE_URL uitsluitend aan Preview.
+
+Voer migrations/001_google_accounts.sql uit in de lege previewdatabase. Als
+DATABASE_URL veilig lokaal beschikbaar is, kan dat met VERCEL_ENV=preview en
+node scripts/migrate-google-accounts.mjs. Er worden geen Xano-records geïmporteerd.
+De OAuth-startroute controleert de database voordat hij Google opent.
+
+Google koppelt op de geverifieerde subject-ID, met aparte tokens per BOB-eigenaar
+en omgeving. De accountkiezer gebruikt een cookie die per verzoek op eigenaarschap
+wordt gecontroleerd. Wisselen herlaadt het dashboard; caches en eventuele
+chatgeschiedenis zijn per Google-account gescheiden. De huidige preview bewaart
+nog geen chatgeschiedenis omdat Xano daar uitgeschakeld is.
+
+Live acceptatie vereist twee eigen Google-accounts, tokenverversing, controle op
+behoud van het eerste account en afwijzing van een onbekende accountselectie.
+Ontkoppelen via de interface en tokenrotatie blijven vervolgwerk.
+
 Voor alleen AI: voeg BOB_PREVIEW_ANTHROPIC_API_KEY als Secret toe aan Vercel,
 uitsluitend Preview en de onderhoudsbranch. Gebruik een afzonderlijke Anthropic-
 testsleutel. Laat BOB_PREVIEW_INTEGRATIONS uit. De app gebruikt dan deze testsleutel

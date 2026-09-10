@@ -62,6 +62,7 @@ export const env = {
   todoist: { token: s(config.TODOIST_API_TOKEN) },
 
   google: {
+    storage: s(config.BOB_GOOGLE_STORAGE),
     id: s(config.GOOGLE_CLIENT_ID),
     secret: s(config.GOOGLE_CLIENT_SECRET),
     scopes: [

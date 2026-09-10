@@ -8,9 +8,10 @@ Getest op de afgeschermde Vercel-preview van de onderhoudsbranch.
   fictief inlogpogingenrecord. Gelijktijdige live claims blijven te testen.
 - Dashboard, Instellingen, Takenhub, Workflows en Security openen.
 - Ontbrekende Google-, Microsoft- en Todoist-koppelingen tonen een lege status.
-- Een dagbriefing geeft een fout over ontbrekende AI-configuratie; de pagina
-  blijft bruikbaar. Er is geen antwoord van een AI-provider gegenereerd.
-- Laptopbridge offline. WhatsApp, echte mail, agenda en AI nog niet geaccepteerd.
+- AI is later afzonderlijk geconfigureerd en de preview is opnieuw gedeployd.
+  Een neutrale vraag (2 plus 2, zonder tools) kreeg antwoord 4. Dit bevestigt
+  de basisverbinding; toolgebruik en een dagbriefing zijn nog niet geaccepteerd.
+- Laptopbridge offline. WhatsApp, echte mail en agenda nog niet geaccepteerd.
 
 Bij de controle zijn verouderde hostingteksten en misleidende statuslabels
 gevonden. De correctie noemt Vercel, markeert modules als in ontwikkeling en

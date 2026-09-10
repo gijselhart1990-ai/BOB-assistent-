@@ -5,6 +5,25 @@ import { beslissing, internPad } from '../lib/validation';
 import { publiekAdres, controleerDoel } from '../lib/web/fetch-public';
 import { requiresApproval } from '../lib/foundation/policy';
 import { deploymentConfiguratie, opslagOmgeving } from '../lib/deployment';
+import { verzegel, openZegel } from '../lib/account-crypto';
+
+test('accounttokens zijn versleuteld en gebonden aan eigenaar en account', () => {
+  const key = 'ab'.repeat(32);
+  const context = JSON.stringify(['preview', 'owner-a', 'google-a', 'access']);
+  const token = { access_token: 'test-access', expires_at: '2030-01-01' };
+  const encrypted = verzegel(token, key, context);
+  assert.ok(!encrypted.includes('test-access'));
+  assert.deepEqual(openZegel(encrypted, key, context), token);
+  assert.notEqual(verzegel(token, key, context), encrypted);
+  for (const changed of [context.replace('owner-a', 'owner-b'), context.replace('google-a', 'google-b'), context.replace('preview', 'production')]) {
+    assert.throws(() => openZegel(encrypted, key, changed));
+  }
+  assert.throws(() => openZegel(encrypted, 'cd'.repeat(32), context));
+  assert.throws(() => verzegel(token, 'short', context));
+  const parts = encrypted.split('.');
+  parts[3] = (parts[3][0] === 'A' ? 'B' : 'A') + parts[3].slice(1);
+  assert.throws(() => openZegel(parts.join('.'), key, context));
+});
 
 process.env.BOB_SESSION_SECRET = 'test-secret-met-minstens-tweeendertig-tekens';
 process.env.KV_REST_API_URL = 'https://redis.example.test';

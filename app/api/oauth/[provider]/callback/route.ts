@@ -31,8 +31,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
     if (provider === 'google') await googleWissel(gebruiker.id, code);
     else if (provider === 'microsoft') await msWissel(gebruiker.id, code);
     else return terug(`Onbekende provider: ${provider}`);
-  } catch (e) {
-    return terug((e as Error).message);
+  } catch {
+    return terug('Koppelen is mislukt. Controleer de Google- of Microsoft-configuratie en de accountopslag.');
   }
   redirect(`/instellingen?koppeling=${provider}&melding=${encodeURIComponent('Gekoppeld.')}`);
 }

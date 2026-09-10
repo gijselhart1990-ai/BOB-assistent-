@@ -5,6 +5,7 @@ import { vraagBob } from '@/lib/ai/claude';
 import { google } from '@/lib/connectors/google';
 import { microsoft } from '@/lib/connectors/microsoft';
 import { todoist } from '@/lib/connectors/todoist';
+import { gekozenGoogleAccount, meerdereGoogleAccounts } from '@/lib/google-accounts';
 
 export const dynamic = 'force-dynamic';
 // De tool-lus kan een paar rondes doen; Netlify's standaardlimiet is te krap.
@@ -61,7 +62,9 @@ type Bericht = { rol: string; inhoud: string; aangemaakt?: number };
 export async function POST(req: Request) {
   try {
     const u = await eisGebruiker();
-    const sleutel = sleutelVan(u);
+    const eigenaar = sleutelVan(u);
+    const account = meerdereGoogleAccounts() ? await gekozenGoogleAccount(u.id).catch(() => null) : null;
+    const sleutel = meerdereGoogleAccounts() ? JSON.stringify([eigenaar, 'google', account?.subject ?? null]) : eigenaar;
 
     const body = await req.json().catch(() => ({}));
     const vraag = String(body?.message || '').trim();
@@ -73,7 +76,7 @@ export async function POST(req: Request) {
       zoek<Bericht>('berichten', { gebruiker: sleutel }, {
         limiet: 10, sorteer: { veld: 'aangemaakt', richting: 'desc' },
       }).catch(() => [] as Bericht[]),
-      eersteOfNull<{ context?: string }>('instellingen', { gebruiker: sleutel }).catch(() => null),
+      eersteOfNull<{ context?: string }>('instellingen', { gebruiker: eigenaar }).catch(() => null),
     ]);
 
     const context = body?.withContext === false ? '' : await liveContext(u.id);
