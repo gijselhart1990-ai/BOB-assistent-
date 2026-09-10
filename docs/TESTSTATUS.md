@@ -35,8 +35,8 @@ ongelezen berichten. Dit bevestigt de eerste koppeling en het teruglezen van
 opgeslagen toegang voor de API-aanroepen. De eerste koppeling bleef behouden na
 deploy b211879. Beide aangewezen accounts zijn nu gekoppeld. Wisselen in beide
 richtingen toont de bijbehorende agendaresultaten. De Gmail-snelkoppeling opent
-voor elk geselecteerd account de juiste inbox. Tokenverversing en AI-context
-bij wisselen blijven afzonderlijk te controleren.
+voor elk geselecteerd account de juiste inbox. Geforceerde tokenverversing
+blijft afzonderlijk te controleren; de AI-agendatest staat hieronder.
 
 De Gmail- en Agenda-snelkoppelingen gebruiken nu een beveiligde serverroute die
 het geselecteerde eigen account doorgeeft aan Google. Een ontbrekend account
@@ -51,3 +51,30 @@ De chat weigert in multi-accountmodus een ontbrekende accountselectie en
 slikt fouten bij het ophalen van het account niet meer stil in.
 Dit zijn code- en fictieve-datatests; een echte refresh-aanroep en een AI-antwoord
 met accountgebonden context zijn hiermee nog niet live geaccepteerd.
+
+## Live AI-acceptatie op preview 25b902a
+
+Vercel bevestigt Ready voor deze versie. Op beide aangewezen accounts is dezelfde
+AI-vraag over het aantal afspraken vandaag uitgevoerd. Beide antwoorden kwamen
+overeen met de afzonderlijke agendaresultaten op het dashboard. Bij wisselen
+verdween het chatantwoord van het vorige account. Een antwoord gebruikte ook
+zichtbaar het agendagereedschap. Er zijn geen afspraaknamen of mailinhoud in
+dit testverslag opgenomen. Dit valideert deze agenda-vraag, geen volledige
+acceptatie van alle AI-tools of blijvende chatgeschiedenis.
+
+## Blijvende chatopslag — voorbereid
+
+Chatbeurten worden per omgeving, eigenaar en Google-account versleuteld in Neon
+opgeslagen. Vraag en antwoord staan atomair in één rij. De laatste 25 beurten
+worden teruggeladen in het dashboard; de AI krijgt de laatste 10 berichten.
+Opslagfouten tonen een melding. Een mislukte historieaanvraag stopt de AI-aanroep
+in de Neon-modus zodat ontbrekend geheugen niet stil wordt genegeerd.
+Tests met nagebootste database-antwoorden controleren versleuteling, scheiding,
+volgorde, gewijzigde ciphertext en storingen. De migratie 002_chat_turns.sql
+is nog niet uitgevoerd: Vercel vraagt opnieuw tweestapsverificatie. Daarom is
+deze wijziging nog niet naar de testbranch gepusht. Live herstel na verversen
+en accountwisselen moet na de migratie en deployment worden getest.
+
+De migratie 002_chat_turns.sql is inmiddels via de Vercel-query-editor uitgevoerd:
+tabel en index gaven beide een succesvolle melding. Alleen-lezen is hersteld.
+Live acceptatie volgt na de deployment.
