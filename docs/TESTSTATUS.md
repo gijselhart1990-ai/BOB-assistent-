@@ -1,4 +1,4 @@
-# Teststatus — 9 september 2026
+# Teststatus — 10 september 2026
 
 Getest op de afgeschermde Vercel-preview van de onderhoudsbranch.
 
@@ -11,7 +11,14 @@ Getest op de afgeschermde Vercel-preview van de onderhoudsbranch.
 - AI is later afzonderlijk geconfigureerd en de preview is opnieuw gedeployd.
   Een neutrale vraag (2 plus 2, zonder tools) kreeg antwoord 4. Dit bevestigt
   de basisverbinding; toolgebruik en een dagbriefing zijn nog niet geaccepteerd.
-- Laptopbridge offline. WhatsApp, echte mail en agenda nog niet geaccepteerd.
+- Laptopbridge offline. WhatsApp en echte mailinhoud nog niet geaccepteerd.
+- Google multi-account: preview d343a79 is Ready; de twee Neon-tabellen zijn
+  succesvol aangemaakt. De Google-startcontrole bereikt de aanmeldpagina.
+  Het aangewezen zakelijke account is als testgebruiker opgeslagen. De eerdere
+  access_denied-blokkade is verholpen. De gebruiker heeft de Google-toestemming
+  doorlopen. BOB toont het account, agendaresultaten en nul ongelezen mails.
+  Tokenverversing en wisselen tussen twee echte accounts zijn nog niet live
+  geverifieerd.
 
 Bij de controle zijn verouderde hostingteksten en misleidende statuslabels
 gevonden. De correctie noemt Vercel, markeert modules als in ontwikkeling en
@@ -20,3 +27,16 @@ toont Google-snelkoppelingen zonder verzonnen aantallen.
 Vervolg: wijs testaccounts aan en configureer afzonderlijke testkoppelingen.
 Schakel niet alle geërfde productieverbindingen tegelijk in. Voer de resterende
 controles uit TASK-003 uit vóór een productiebeoordeling.
+
+## Live vervolgcontrole
+
+Het aangewezen zakelijke Google-account verschijnt als geselecteerd account in
+BOB. De Google Workspace-pagina toont agendaresultaten en Gmail meldt nul
+ongelezen berichten. Dit bevestigt de eerste koppeling en het teruglezen van
+opgeslagen toegang voor de API-aanroepen. Tokenverversing, behoud na een nieuwe
+deploy en wisselen tussen twee accounts blijven afzonderlijke controles.
+Een tweede accountadres is nog niet aangewezen.
+
+De Gmail- en Agenda-snelkoppelingen gebruiken nu een beveiligde serverroute die
+het geselecteerde eigen account doorgeeft aan Google. Een ontbrekend account
+geeft in multi-accountmodus een fout, geen stille terugval op een ander account.

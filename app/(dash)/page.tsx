@@ -103,7 +103,7 @@ export default function Vandaag() {
               {agenda.bezig ? <Skelet /> : <Agenda data={agenda.data} offset={offset} />}
             </div>
             <footer className="card-foot">
-              <a href="https://calendar.google.com" target="_blank" rel="noopener">Volledige agenda bekijken <span className="arrow">↗</span></a>
+              <a href="/api/google/open?service=calendar" target="_blank" rel="noopener">Volledige agenda bekijken <span className="arrow">↗</span></a>
             </footer>
           </section>
 
@@ -198,8 +198,8 @@ export default function Vandaag() {
               rechts={<span className={`pill${mail.data?.gmail?.ok ? '' : ' muted'}`}>{mail.data?.gmail?.ok ? `${mail.data.gmail.unread} ongelezen` : 'niet gekoppeld'}</span>} />
             <div className="card-body">
               <div className="app-grid">
-                <Tegel naam="Gmail" kleur="#ea4335" href="https://mail.google.com" ico={<Ico.mail />} aantal={mail.data?.gmail?.unread || 0} gekoppeld={Boolean(mail.data?.gmail?.ok)} />
-                <Tegel naam="Agenda" kleur="#1a73e8" href="https://calendar.google.com" ico={<Ico.agenda />} snelkoppeling />
+                <Tegel naam="Gmail" kleur="#ea4335" href="/api/google/open?service=gmail" ico={<Ico.mail />} aantal={mail.data?.gmail?.unread || 0} gekoppeld={Boolean(mail.data?.gmail?.ok)} />
+                <Tegel naam="Agenda" kleur="#1a73e8" href="/api/google/open?service=calendar" ico={<Ico.agenda />} snelkoppeling />
                 <Tegel naam="Drive" kleur="#00ac47" href="https://drive.google.com" ico={<Ico.drive />} snelkoppeling />
                 <Tegel naam="Foto's" kleur="#f9ab00" href="https://photos.google.com" ico={<Ico.fotos />} snelkoppeling />
               </div>

@@ -1,12 +1,16 @@
 # TASK-004 — Koppelingen met vaste opslag via Vercel
 
 Status: gratis Neon-database bob-preview-db in Frankfurt aangemaakt en met
-uitsluitend Vercel Preview verbonden. Google-accounts nog niet aangesloten.
-De migratie migrations/001_google_accounts.sql is voorbereid, nog niet uitgevoerd.
+uitsluitend Vercel Preview verbonden. Het eerste Google-account is aangesloten.
+De twee tabellen uit migrations/001_google_accounts.sql zijn via de Vercel-query-editor
+aangemaakt; beide opdrachten zijn succesvol uitgevoerd. Alleen-lezen is daarna hersteld.
 Opslagadapter, versleuteling, OAuth-opslag en accountkiezer zijn geïmplementeerd
 voor Preview. Tests voor versleuteling, lint, typecontrole en build slagen.
-Live SQL-acceptatie en koppelen van twee accounts blijven open. De query-editor
-van Vercel vraagt tweestapsverificatie voordat de migratie kan worden uitgevoerd.
+De preview van commit d343a79 is Ready. De Google-startcontrole bereikt de
+aanmeldpagina. Het aangewezen zakelijke account is na expliciete toestemming
+opgeslagen als testgebruiker. De eerdere access_denied-blokkade is verholpen;
+de gebruiker heeft de Google-toestemming doorlopen. BOB toont het account en
+agendaresultaten. Tokenverversing en koppelen van twee accounts blijven open.
 
 ## Besloten
 
@@ -20,9 +24,9 @@ van Vercel vraagt tweestapsverificatie voordat de migratie kan worden uitgevoerd
 
 ## Geconstateerde afhankelijkheden
 
-OAuth-tokens, chatgeschiedenis en bridge-tokens gebruiken nog lib/xano.ts.
-De preview schakelt Xano uit. Alleen Google-clientcredentials toevoegen is dus
-onvoldoende: de callback kan het token dan niet bewaren.
+Google-tokens gebruiken in de afzonderlijk geconfigureerde preview Neon met
+versleuteling. Productie, Microsoft-tokens, chatgeschiedenis en bridge-tokens
+gebruiken nog lib/xano.ts. De preview schakelt Xano uit.
 Redis bewaart uitsluitend tijdelijke records met TTL; gebruik die functies niet
 voor blijvende OAuth-tokens. WhatsApp gebruikt een afzonderlijk laptopproces.
 
@@ -60,6 +64,20 @@ voor blijvende OAuth-tokens. WhatsApp gebruikt een afzonderlijk laptopproces.
 - npm run verify slaagt; live mail/agenda-test staat apart vermeld.
 - WhatsApp is pas gekoppeld na bevestigde laptopverbinding en QR-aanmelding.
 
-De preview kan Google-tokens in Neon bewaren zodra de migratie is uitgevoerd.
+De Neon-tabellen voor Google-tokens zijn aanwezig; de eerste accountkoppeling
+en het teruglezen voor echte Google-API-aanroepen zijn bevestigd.
 Productie en opslag van chatberichten, instellingen en bridge-tokens blijven Xano
 gebruiken. Previewchat werkt zonder blijvende geschiedenis zolang Xano uit staat.
+
+## Live vervolgcontrole
+
+Het aangewezen zakelijke Google-account verschijnt als geselecteerd account in
+BOB. De Google Workspace-pagina toont agendaresultaten en Gmail meldt nul
+ongelezen berichten. Dit bevestigt de eerste koppeling en het teruglezen van
+opgeslagen toegang voor de API-aanroepen. Tokenverversing, behoud na een nieuwe
+deploy en wisselen tussen twee accounts blijven afzonderlijke controles.
+Een tweede accountadres is nog niet aangewezen.
+
+De Gmail- en Agenda-snelkoppelingen gebruiken nu een beveiligde serverroute die
+het geselecteerde eigen account doorgeeft aan Google. Een ontbrekend account
+geeft in multi-accountmodus een fout, geen stille terugval op een ander account.
