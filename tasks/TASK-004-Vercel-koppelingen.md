@@ -25,7 +25,7 @@ agendaresultaten. Beide accounts zijn gekoppeld; tokenverversing blijft afzonder
 ## Geconstateerde afhankelijkheden
 
 Google-tokens gebruiken in de afzonderlijk geconfigureerde preview Neon met
-versleuteling. Productie, Microsoft-tokens, chatgeschiedenis en bridge-tokens
+versleuteling. Productie, Microsoft-tokens en bridge-tokens
 gebruiken nog lib/xano.ts. De preview schakelt Xano uit.
 Redis bewaart uitsluitend tijdelijke records met TTL; gebruik die functies niet
 voor blijvende OAuth-tokens. WhatsApp gebruikt een afzonderlijk laptopproces.
@@ -66,8 +66,8 @@ voor blijvende OAuth-tokens. WhatsApp gebruikt een afzonderlijk laptopproces.
 
 De Neon-tabellen voor Google-tokens zijn aanwezig; de eerste accountkoppeling
 en het teruglezen voor echte Google-API-aanroepen zijn bevestigd.
-Productie en opslag van chatberichten, instellingen en bridge-tokens blijven Xano
-gebruiken. Previewchat werkt zonder blijvende geschiedenis zolang Xano uit staat.
+Productie, instellingen en bridge-tokens gebruiken nog Xano. Previewchat bewaart
+gesprekken inmiddels versleuteld in Neon; herstel en accountscheiding zijn live getest.
 
 ## Live vervolgcontrole
 
@@ -83,3 +83,6 @@ bij wisselen blijven afzonderlijk te controleren.
 De Gmail- en Agenda-snelkoppelingen gebruiken nu een beveiligde serverroute die
 het geselecteerde eigen account doorgeeft aan Google. Een ontbrekend account
 geeft in multi-accountmodus een fout, geen stille terugval op een ander account.
+
+Vervolg voor Outlook staat in TASK-005-Outlook-Vercel.md. Accountwisselen tussen
+meerdere BOB-tabbladen is op preview f510fb9 in beide richtingen live bevestigd.

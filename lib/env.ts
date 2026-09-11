@@ -76,6 +76,8 @@ export const env = {
     id: s(config.MICROSOFT_CLIENT_ID),
     secret: s(config.MICROSOFT_CLIENT_SECRET),
     tenant: s(config.MICROSOFT_TENANT, 'common'),
+    accountEmail: s(config.MICROSOFT_ACCOUNT_EMAIL).toLowerCase(),
+    contextEmail: s(config.MICROSOFT_CONTEXT_EMAIL).toLowerCase(),
     scopes: ['offline_access', 'User.Read', 'Mail.Read', 'Calendars.Read'],
   },
 
@@ -104,10 +106,16 @@ export function capabilities() {
     stem: Boolean(env.cartesia.key && env.cartesia.voice),
     todoist: Boolean(env.todoist.token),
     google: Boolean(env.google.id && env.google.secret),
-    microsoft: Boolean(env.microsoft.id),
+    microsoft: microsoftIngesteld(),
     web: Boolean(env.brave.key),
     social: Boolean(env.social.linkedin || env.social.instagram || env.social.facebook || env.social.tiktok),
     xano: Boolean(env.xano.instance && env.xano.token && env.xano.workspace),
     mail: Boolean(env.mail.resend || env.mail.sendgrid),
   };
+}
+
+export function microsoftIngesteld() {
+  return Boolean(env.microsoft.id && env.microsoft.secret && env.microsoft.accountEmail
+    && env.microsoft.contextEmail && /^[a-f0-9-]{36}$/i.test(env.microsoft.tenant)
+    && env.google.storage === 'postgres');
 }

@@ -18,6 +18,9 @@ export function deploymentConfiguratie(bron: Configuratie): Configuratie {
     config.GOOGLE_CLIENT_ID = bron.BOB_PREVIEW_GOOGLE_CLIENT_ID || '';
     config.GOOGLE_CLIENT_SECRET = bron.BOB_PREVIEW_GOOGLE_CLIENT_SECRET || '';
     config.BOB_GOOGLE_STORAGE = 'postgres';
+    for (const name of ['CLIENT_ID', 'CLIENT_SECRET', 'TENANT', 'ACCOUNT_EMAIL', 'CONTEXT_EMAIL']) {
+      config[`MICROSOFT_${name}`] = bron[`BOB_PREVIEW_MICROSOFT_${name}`] || '';
+    }
   }
   return config;
 }

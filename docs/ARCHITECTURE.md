@@ -25,6 +25,14 @@ is een e-mailadres. Dit is geen volwaardig organisatiemodel of tenantisolatie.
 
 ## Opslag en uitvoering
 
+Preview gebruikt inmiddels Neon voor Google-accounts, chatgeschiedenis en
+Microsoft-koppelingen. Outlook-tokens zijn versleuteld en gekoppeld aan één
+Google-werkcontext; accountkeuze begrenst zowel het dashboard als AI-opvragingen.
+De Microsoft-callback gebruikt PKCE, een versleutelde sessiegebonden cookie en
+een eenmalige Redis-claim. Zie [Outlook via Vercel](OUTLOOK-VERCEL.md) voor migratie
+en de voorwaarden vóór een productierelease. De legacy Xano-route blijft voor
+overige bestaande gegevens bestaan.
+
 Xano wordt via de Metadata API gebruikt. Updates nemen de bestaande rij mee:
 PUT vervangt een record. Verzoeken hebben een tijdslimiet; transacties en
 concurrente upserts zijn daarmee nog niet opgelost.
@@ -54,6 +62,6 @@ Zonder die opslag werken inlogbeveiliging en bridge niet. Zie DEPLOYMENT.md.
 
 ## Doelarchitectuur
 
-PostgreSQL, organisaties/rollen, auditlog, persistente workers en visuele
+Organisaties/rollen, auditlog, persistente workers en visuele
 workflowversies zijn roadmaponderdelen. Ze zijn geen bestaande runtime-
 afhankelijkheden en vereisen een afzonderlijke migratie met acceptatietests.

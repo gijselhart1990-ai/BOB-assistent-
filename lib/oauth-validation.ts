@@ -24,3 +24,24 @@ export function googleToken(payload: unknown, previous: OauthToken = {}): OauthT
     expires_at: new Date(Date.now() + seconds * 1000).toISOString(),
   };
 }
+
+export function microsoftToken(payload: unknown, previous: OauthToken = {}): OauthToken {
+  let token: OauthToken;
+  try { token = googleToken(payload, previous); }
+  catch { throw new Error('Microsoft gaf een ongeldig tokenantwoord terug.'); }
+  const scopes = new Set((token.scope || '').toLowerCase().split(/\s+/).map(s => s.replace('https://graph.microsoft.com/', '')));
+  if (!token.refresh_token || !['user.read', 'mail.read', 'calendars.read'].every(s => scopes.has(s))) {
+    throw new Error('Microsoft heeft niet alle benodigde leesrechten gegeven. Koppel opnieuw.');
+  }
+  return token;
+}
+
+export function microsoftIdentiteit(payload: unknown, expectedEmail: string) {
+  const profile = payload as Record<string, unknown> | null;
+  const email = typeof profile?.mail === 'string' && profile.mail.trim()
+    ? profile.mail.trim().toLowerCase()
+    : typeof profile?.userPrincipalName === 'string' ? profile.userPrincipalName.trim().toLowerCase() : '';
+  if (!profile || typeof profile.id !== 'string' || !/^[a-f0-9-]{36}$/i.test(profile.id)
+    || !email || email !== expectedEmail.toLowerCase()) throw new Error('Dit is niet de ingestelde Outlook-mailbox.');
+  return { subject: profile.id, email };
+}

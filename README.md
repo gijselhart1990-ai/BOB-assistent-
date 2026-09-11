@@ -43,7 +43,10 @@ De laptopbridge is een apart Node-project in bridge/.
 
 ## Huidige grenzen
 
-Xano bewaart tokens, berichten en instellingen. Redis via Vercel Marketplace bewaart de wachtrij,
+Preview bewaart Google-accounts en chatgeschiedenis in Neon. Ook de nieuwe
+Outlook-connector gebruikt versleutelde Neon-opslag per werkcontext; live
+koppeling volgt na [configuratie en acceptatie](docs/OUTLOOK-VERCEL.md).
+Xano blijft voor overige legacygegevens bestaan. Redis via Vercel Marketplace bewaart de wachtrij,
 hartslag, gebruikte inloglinks en inlogpogingen. Een laptopproces verzorgt browser
  en WhatsApp; dat werkt alleen als de laptop en bridge beschikbaar zijn.
 

@@ -2,7 +2,11 @@ import { redirect } from 'next/navigation';
 import { eisGebruiker } from '@/lib/auth';
 import { fout } from '@/lib/http';
 import { autorisatieUrl as googleUrl } from '@/lib/connectors/google';
-import { autorisatieUrl as msUrl } from '@/lib/connectors/microsoft';
+import { autorisatieUrl as msUrl, microsoftContext } from '@/lib/connectors/microsoft';
+import { microsoftAccountStore } from '@/lib/microsoft-account-store';
+import { maakMicrosoftAanmelding, microsoftOAuthCookie } from '@/lib/microsoft-oauth';
+import { cookies } from 'next/headers';
+import { cookieOpties } from '@/lib/session';
 import { tekenState } from '@/lib/session';
 import { env } from '@/lib/env';
 import { meerdereGoogleAccounts } from '@/lib/google-accounts';
@@ -20,7 +24,14 @@ export async function GET(_req: Request, ctx: { params: Promise<{ provider: stri
       if (meerdereGoogleAccounts()) await googleAccountStore(u.id).list();
       redirect(googleUrl(state));
     }
-    if (provider === 'microsoft') redirect(msUrl(state));
+    if (provider === 'microsoft') {
+      const account = await microsoftContext(u.id);
+      if (!account) redirect('/instellingen?melding=Selecteer%20de%20ingestelde%20Outlook-werkcontext%20en%20controleer%20de%20Microsoft-configuratie.');
+      await microsoftAccountStore(u.id, account.subject).read();
+      const login = maakMicrosoftAanmelding(u.id, account.subject, env.secret);
+      (await cookies()).set(microsoftOAuthCookie, login.cookie, { ...cookieOpties, maxAge: 600 });
+      redirect(msUrl(login.state, login.challenge));
+    }
     return Response.json({ ok: false, error: `Onbekende provider: ${provider}` }, { status: 404 });
   } catch (err) {
     // redirect() gooit intern; die moet doorgelaten worden.

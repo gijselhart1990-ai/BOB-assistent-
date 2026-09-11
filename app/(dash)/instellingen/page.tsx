@@ -51,7 +51,7 @@ function Inhoud() {
                   aan={Boolean(status.data?.gekoppeld?.microsoft)}
                   klaar={Boolean(caps.microsoft)}
                   href="/api/oauth/microsoft/start"
-                  uitleg="Alleen de client-ID is verplicht; een secret is optioneel." />
+                  uitleg="Leesrechten op Outlook-mail en agenda, alleen binnen de ingestelde werkcontext." />
                 <Regel titel="Todoist" aan={Boolean(caps.todoist)} klaar={Boolean(caps.todoist)}
                   uitleg="Werkt via een API-token in de omgevingsvariabelen." />
                 <Regel titel="Claude (het brein)" aan={Boolean(caps.brein)} klaar={Boolean(caps.brein)}
