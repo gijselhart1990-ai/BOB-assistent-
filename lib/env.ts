@@ -6,61 +6,65 @@
  * dus je sleutels blijven op de server.
  */
 
+import { deploymentConfiguratie } from './deployment';
+
+const config = deploymentConfiguratie(process.env);
 const s = (v: string | undefined, fallback = '') => (v ?? fallback).trim();
 const n = (v: string | undefined, fallback: number) => Number(v ?? fallback) || fallback;
 
 export const env = {
-  site: s(process.env.NEXT_PUBLIC_SITE_URL, 'http://localhost:3000').replace(/\/$/, ''),
+  site: s(config.NEXT_PUBLIC_SITE_URL, 'http://localhost:3000').replace(/\/$/, ''),
 
   /** Waarmee sessiecookies en OAuth-state worden ondertekend. */
-  secret: s(process.env.BOB_SESSION_SECRET),
+  secret: s(config.BOB_SESSION_SECRET),
 
   /** Wie er binnen mag. Eén adres is genoeg; meerdere met komma's. */
-  toegestaan: s(process.env.BOB_ALLOWED_EMAILS)
+  toegestaan: s(config.BOB_ALLOWED_EMAILS)
     .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean),
 
   /** Noodingang als er nog geen mailer staat: één lange geheime code. */
-  loginCode: s(process.env.BOB_LOGIN_CODE),
+  loginCode: s(config.BOB_LOGIN_CODE),
 
   xano: {
     /** Bijvoorbeeld https://x8ki-letl-twmt.n7.xano.io */
-    instance: s(process.env.XANO_INSTANCE_URL).replace(/\/$/, ''),
-    token: s(process.env.XANO_METADATA_TOKEN),
-    workspace: s(process.env.XANO_WORKSPACE_ID),
+    instance: s(config.XANO_INSTANCE_URL).replace(/\/$/, ''),
+    token: s(config.XANO_METADATA_TOKEN),
+    workspace: s(config.XANO_WORKSPACE_ID),
     tabellen: {
-      oauth_tokens: s(process.env.XANO_TABLE_OAUTH_TOKENS),
-      berichten: s(process.env.XANO_TABLE_BERICHTEN),
-      instellingen: s(process.env.XANO_TABLE_INSTELLINGEN),
-      bridge_tokens: s(process.env.XANO_TABLE_BRIDGE_TOKENS),
+      oauth_tokens: s(config.XANO_TABLE_OAUTH_TOKENS),
+      berichten: s(config.XANO_TABLE_BERICHTEN),
+      instellingen: s(config.XANO_TABLE_INSTELLINGEN),
+      bridge_tokens: s(config.XANO_TABLE_BRIDGE_TOKENS),
     },
   },
 
   mail: {
-    resend: s(process.env.RESEND_API_KEY),
-    sendgrid: s(process.env.SENDGRID_API_KEY),
-    van: s(process.env.BOB_MAIL_FROM, 'BOB <onboarding@resend.dev>'),
+    resend: s(config.RESEND_API_KEY),
+    sendgrid: s(config.SENDGRID_API_KEY),
+    van: s(config.BOB_MAIL_FROM, 'BOB <onboarding@resend.dev>'),
   },
 
   anthropic: {
-    key: s(process.env.ANTHROPIC_API_KEY),
-    model: s(process.env.ANTHROPIC_MODEL, 'claude-sonnet-5'),
-    base: s(process.env.ANTHROPIC_BASE, 'https://api.anthropic.com'),
+    key: s(config.ANTHROPIC_API_KEY),
+    model: s(config.ANTHROPIC_MODEL, 'claude-sonnet-5'),
+    base: s(config.ANTHROPIC_BASE, 'https://api.anthropic.com'),
   },
 
   cartesia: {
-    key: s(process.env.CARTESIA_API_KEY),
-    voice: s(process.env.CARTESIA_VOICE_ID),
-    version: s(process.env.CARTESIA_VERSION, '2026-08-14'),
-    tts: s(process.env.CARTESIA_TTS_MODEL, 'sonic-3.6'),
-    stt: s(process.env.CARTESIA_STT_MODEL, 'ink-whisper'),
-    taal: s(process.env.CARTESIA_LANGUAGE, 'nl'),
+    key: s(config.CARTESIA_API_KEY),
+    voice: s(config.CARTESIA_VOICE_ID),
+    version: s(config.CARTESIA_VERSION, '2026-08-14'),
+    tts: s(config.CARTESIA_TTS_MODEL, 'sonic-3.6'),
+    stt: s(config.CARTESIA_STT_MODEL, 'ink-whisper'),
+    taal: s(config.CARTESIA_LANGUAGE, 'nl'),
   },
 
-  todoist: { token: s(process.env.TODOIST_API_TOKEN) },
+  todoist: { token: s(config.TODOIST_API_TOKEN) },
 
   google: {
-    id: s(process.env.GOOGLE_CLIENT_ID),
-    secret: s(process.env.GOOGLE_CLIENT_SECRET),
+    storage: s(config.BOB_GOOGLE_STORAGE),
+    id: s(config.GOOGLE_CLIENT_ID),
+    secret: s(config.GOOGLE_CLIENT_SECRET),
     scopes: [
       'https://www.googleapis.com/auth/calendar.readonly',
       'https://www.googleapis.com/auth/gmail.readonly',
@@ -69,26 +73,28 @@ export const env = {
   },
 
   microsoft: {
-    id: s(process.env.MICROSOFT_CLIENT_ID),
-    secret: s(process.env.MICROSOFT_CLIENT_SECRET),
-    tenant: s(process.env.MICROSOFT_TENANT, 'common'),
+    id: s(config.MICROSOFT_CLIENT_ID),
+    secret: s(config.MICROSOFT_CLIENT_SECRET),
+    tenant: s(config.MICROSOFT_TENANT, 'common'),
+    accountEmail: s(config.MICROSOFT_ACCOUNT_EMAIL).toLowerCase(),
+    contextEmail: s(config.MICROSOFT_CONTEXT_EMAIL).toLowerCase(),
     scopes: ['offline_access', 'User.Read', 'Mail.Read', 'Calendars.Read'],
   },
 
   brave: {
-    key: s(process.env.BRAVE_API_KEY),
-    land: s(process.env.BRAVE_COUNTRY, 'NL'),
-    taal: s(process.env.BRAVE_LANG, 'nl'),
+    key: s(config.BRAVE_API_KEY),
+    land: s(config.BRAVE_COUNTRY, 'NL'),
+    taal: s(config.BRAVE_LANG, 'nl'),
   },
 
   social: {
-    linkedin: s(process.env.LINKEDIN_ACCESS_TOKEN),
-    instagram: s(process.env.INSTAGRAM_ACCESS_TOKEN),
-    facebook: s(process.env.FACEBOOK_ACCESS_TOKEN),
-    tiktok: s(process.env.TIKTOK_ACCESS_TOKEN),
+    linkedin: s(config.LINKEDIN_ACCESS_TOKEN),
+    instagram: s(config.INSTAGRAM_ACCESS_TOKEN),
+    facebook: s(config.FACEBOOK_ACCESS_TOKEN),
+    tiktok: s(config.TIKTOK_ACCESS_TOKEN),
   },
 
-  sessieDagen: n(process.env.BOB_SESSION_DAYS, 30),
+  sessieDagen: n(config.BOB_SESSION_DAYS, 30),
 };
 
 export const redirectUri = (provider: 'google' | 'microsoft') =>
@@ -100,10 +106,16 @@ export function capabilities() {
     stem: Boolean(env.cartesia.key && env.cartesia.voice),
     todoist: Boolean(env.todoist.token),
     google: Boolean(env.google.id && env.google.secret),
-    microsoft: Boolean(env.microsoft.id),
+    microsoft: microsoftIngesteld(),
     web: Boolean(env.brave.key),
     social: Boolean(env.social.linkedin || env.social.instagram || env.social.facebook || env.social.tiktok),
     xano: Boolean(env.xano.instance && env.xano.token && env.xano.workspace),
     mail: Boolean(env.mail.resend || env.mail.sendgrid),
   };
+}
+
+export function microsoftIngesteld() {
+  return Boolean(env.microsoft.id && env.microsoft.secret && env.microsoft.accountEmail
+    && env.microsoft.contextEmail && /^[a-f0-9-]{36}$/i.test(env.microsoft.tenant)
+    && env.google.storage === 'postgres');
 }

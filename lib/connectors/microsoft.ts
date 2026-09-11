@@ -1,11 +1,13 @@
-import { env, redirectUri } from '@/lib/env';
+import { env, redirectUri, microsoftIngesteld } from '@/lib/env';
 import { cached } from '@/lib/cache';
-import { leesToken, schrijfToken, verlopen } from '@/lib/tokens';
+import { verlopen, microsoftToken, microsoftIdentiteit } from '@/lib/oauth-validation';
+import { gekozenGoogleAccount } from '@/lib/google-accounts';
+import { microsoftAccountStore, type MicrosoftAccount } from '@/lib/microsoft-account-store';
 
 const basis = () => `https://login.microsoftonline.com/${env.microsoft.tenant || 'common'}/oauth2/v2.0`;
 const GRAPH = 'https://graph.microsoft.com/v1.0';
 
-export function autorisatieUrl(state: string) {
+export function autorisatieUrl(state: string, challenge: string) {
   const url = new URL(`${basis()}/authorize`);
   url.searchParams.set('client_id', env.microsoft.id);
   url.searchParams.set('response_type', 'code');
@@ -13,72 +15,87 @@ export function autorisatieUrl(state: string) {
   url.searchParams.set('response_mode', 'query');
   url.searchParams.set('scope', env.microsoft.scopes.join(' '));
   url.searchParams.set('state', state);
+  url.searchParams.set('code_challenge', challenge);
+  url.searchParams.set('code_challenge_method', 'S256');
+  url.searchParams.set('login_hint', env.microsoft.accountEmail);
+  url.searchParams.set('prompt', 'select_account');
   return url.toString();
 }
 
-export async function wisselCode(userId: string, code: string) {
+export async function microsoftContext(userId: string) {
+  if (!microsoftIngesteld()) return null;
+  const account = await gekozenGoogleAccount(userId);
+  return account?.email.toLowerCase() === env.microsoft.contextEmail ? account : null;
+}
+
+export async function wisselCode(userId: string, code: string, verifier: string, context: string) {
+  const selected = await microsoftContext(userId);
+  if (!selected || selected.subject !== context) throw new Error('De werkcontext is gewijzigd. Begin opnieuw.');
   const form = new URLSearchParams({
     client_id: env.microsoft.id,
+    client_secret: env.microsoft.secret,
     code,
+    code_verifier: verifier,
     redirect_uri: redirectUri('microsoft'),
     grant_type: 'authorization_code',
     scope: env.microsoft.scopes.join(' '),
   });
-  // Zonder secret werkt de "public client" route. Die eisen zou de
-  // device-code-variant onmogelijk maken, en dat is juist de betrouwbaarste.
-  if (env.microsoft.secret) form.set('client_secret', env.microsoft.secret);
-
-  const res = await fetch(`${basis()}/token`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: form,
-  });
-  if (!res.ok) throw new Error(`Microsoft token ${res.status}: ${(await res.text()).slice(0, 300)}`);
-  const t = await res.json();
-  await schrijfToken(userId, 'microsoft', {
-    access_token: t.access_token,
-    refresh_token: t.refresh_token,
-    scope: t.scope,
-    public_client: !env.microsoft.secret,
-    expires_at: new Date(Date.now() + (t.expires_in ?? 3600) * 1000).toISOString(),
-  });
+  const token = microsoftToken(await tokenVerzoek(form));
+  const profile = await graphVerzoek(token.access_token!, '/me?$select=id,mail,userPrincipalName');
+  const identity = microsoftIdentiteit(profile, env.microsoft.accountEmail);
+  // Alleen een volledig geverifieerde identiteit mag een bestaande koppeling vervangen.
+  await microsoftAccountStore(userId, context).save({ tenant: env.microsoft.tenant,
+    subject: identity.subject, email: identity.email, token });
 }
 
-async function toegang(userId: string) {
-  const t = await leesToken(userId, 'microsoft');
-  if (!t) throw Object.assign(new Error('Microsoft niet verbonden'), { status: 428 });
+async function tokenVerzoek(form: URLSearchParams) {
+  const res = await fetch(`${basis()}/token`, { method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: form,
+    cache: 'no-store', redirect: 'error', signal: AbortSignal.timeout(15_000) });
+  if (!res.ok) throw new Error(`Microsoft-aanmelding mislukt (${res.status}). Koppel zo nodig opnieuw.`);
+  return res.json();
+}
+
+async function verbinding(userId: string) {
+  const context = await microsoftContext(userId);
+  if (!context) return null;
+  const store = microsoftAccountStore(userId, context.subject);
+  const account = await store.read();
+  if (!account || account.tenant !== env.microsoft.tenant || account.email !== env.microsoft.accountEmail) return null;
+  return { store, account, context: context.subject };
+}
+
+async function toegang(connection: NonNullable<Awaited<ReturnType<typeof verbinding>>>) {
+  const { store, account } = connection;
+  const t = account.token;
   if (t.access_token && !verlopen(t.expires_at)) return t.access_token;
   if (!t.refresh_token) throw Object.assign(new Error('Microsoft-token verlopen — koppel opnieuw'), { status: 428 });
 
   const form = new URLSearchParams({
     client_id: env.microsoft.id,
+    client_secret: env.microsoft.secret,
     refresh_token: t.refresh_token,
     grant_type: 'refresh_token',
     scope: env.microsoft.scopes.join(' '),
   });
-  if (!t.public_client && env.microsoft.secret) form.set('client_secret', env.microsoft.secret);
-
-  const res = await fetch(`${basis()}/token`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: form,
-  });
-  if (!res.ok) throw new Error(`Microsoft verversen mislukt (${res.status})`);
-  const fresh = await res.json();
-  await schrijfToken(userId, 'microsoft', {
-    ...t,
-    access_token: fresh.access_token,
-    refresh_token: fresh.refresh_token ?? t.refresh_token,
-    expires_at: new Date(Date.now() + (fresh.expires_in ?? 3600) * 1000).toISOString(),
-  });
-  return fresh.access_token as string;
+  const fresh = microsoftToken(await tokenVerzoek(form), t);
+  if (await store.save({ ...account, token: fresh }, account.version)) return fresh.access_token!;
+  // Een gelijktijdige verversing of herkoppeling heeft voorrang; overschrijf die niet.
+  const latest = await store.read();
+  if (!latest || latest.subject !== account.subject || latest.tenant !== account.tenant
+    || verlopen(latest.token.expires_at)) throw new Error('Outlook-koppeling gewijzigd. Vernieuw het dashboard.');
+  return latest.token.access_token!;
 }
 
-async function graph(userId: string, pad: string) {
-  const at = await toegang(userId);
-  const res = await fetch(`${GRAPH}${pad}`, { headers: { Authorization: `Bearer ${at}` } });
-  if (!res.ok) throw new Error(`Graph ${res.status}: ${(await res.text()).slice(0, 200)}`);
+async function graphVerzoek(at: string, pad: string) {
+  const res = await fetch(`${GRAPH}${pad}`, { headers: { Authorization: `Bearer ${at}` },
+    cache: 'no-store', redirect: 'error', signal: AbortSignal.timeout(15_000) });
+  if (!res.ok) throw new Error(`Outlook ophalen mislukt (${res.status}).`);
   return res.json();
+}
+
+function cacheScope(owner: string, context: string, account: MicrosoftAccount) {
+  return JSON.stringify([owner, context, account.tenant, account.subject, account.version]);
 }
 
 function dagGrenzen(offset = 0) {
@@ -89,20 +106,20 @@ function dagGrenzen(offset = 0) {
 }
 
 export const microsoft = {
-  // Alleen de client-ID is verplicht — zie de opmerking bij wisselCode.
-  ingesteld: () => Boolean(env.microsoft.id),
+  ingesteld: microsoftIngesteld,
 
   async gekoppeld(userId: string) {
-    return Boolean(await leesToken(userId, 'microsoft'));
+    return Boolean(await verbinding(userId));
   },
 
   async agenda(userId: string, offset = 0) {
     if (!microsoft.ingesteld()) return { ok: false, reason: 'niet ingesteld' as const, events: [] };
-    if (!(await microsoft.gekoppeld(userId))) return { ok: false, reason: 'niet gekoppeld' as const, events: [] };
+    const connection = await verbinding(userId);
+    if (!connection) return { ok: false, reason: 'niet gekoppeld' as const, events: [] };
 
-    return cached(`ms:agenda:${userId}:${offset}`, 120_000, async () => {
+    return cached(`ms:agenda:${cacheScope(userId, connection.context, connection.account)}:${offset}`, 120_000, async () => {
       const { start, eind } = dagGrenzen(offset);
-      const d = await graph(userId,
+      const d = await graphVerzoek(await toegang(connection),
         `/me/calendarView?startDateTime=${start}&endDateTime=${eind}&$orderby=start/dateTime&$top=25`);
       const events = (d.value || []).map((e: any) => ({
         id: e.id,
@@ -122,10 +139,12 @@ export const microsoft = {
 
   async mail(userId: string) {
     if (!microsoft.ingesteld()) return { ok: false, reason: 'niet ingesteld' as const, unread: 0, messages: [] };
-    if (!(await microsoft.gekoppeld(userId))) return { ok: false, reason: 'niet gekoppeld' as const, unread: 0, messages: [] };
+    const connection = await verbinding(userId);
+    if (!connection) return { ok: false, reason: 'niet gekoppeld' as const, unread: 0, messages: [] };
 
-    return cached(`ms:mail:${userId}`, 90_000, async () => {
-      const d = await graph(userId,
+    return cached(`ms:mail:${cacheScope(userId, connection.context, connection.account)}`, 90_000, async () => {
+      const at = await toegang(connection);
+      const d = await graphVerzoek(at,
         '/me/mailFolders/inbox/messages?$filter=isRead eq false&$select=from,subject,receivedDateTime,webLink&$top=8&$orderby=receivedDateTime desc');
       const messages = (d.value || []).map((m: any) => ({
         id: m.id,
@@ -136,7 +155,7 @@ export const microsoft = {
       }));
       let unread = messages.length;
       try {
-        const f = await graph(userId, '/me/mailFolders/inbox?$select=unreadItemCount');
+        const f = await graphVerzoek(at, '/me/mailFolders/inbox?$select=unreadItemCount');
         if (typeof f.unreadItemCount === 'number') unread = f.unreadItemCount;
       } catch { /* het aantal is minder belangrijk dan de lijst */ }
       return { ok: true, unread, messages };

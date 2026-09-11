@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { staatOpLijst } from '@/lib/auth';
 import { leesInlogToken, maakSessie, cookieNaam, cookieOpties } from '@/lib/session';
-import { eersteKeer } from '@/lib/blobs';
+import { eersteKeer } from '@/lib/storage';
+import { internPad } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,14 +23,17 @@ export async function GET(req: Request) {
   const token = url.searchParams.get('token');
   const verder = url.searchParams.get('verder') || '/';
   // Alleen paden binnen de site — anders is dit een open redirect.
-  const bestemming = verder.startsWith('/') && !verder.startsWith('//') ? verder : '/';
+  const bestemming = internPad(verder);
 
   if (!token) return NextResponse.redirect(new URL('/login?reden=geen-code', url.origin));
 
   const gelezen = leesInlogToken(token);
   if (!gelezen) return NextResponse.redirect(new URL('/login?reden=ongeldig', url.origin));
 
-  if (!(await eersteKeer(gelezen.id))) {
+  let nieuw: boolean;
+  try { nieuw = await eersteKeer(gelezen.id); }
+  catch { return NextResponse.redirect(new URL('/login?reden=opslag', url.origin)); }
+  if (!nieuw) {
     return NextResponse.redirect(new URL('/login?reden=gebruikt', url.origin));
   }
 

@@ -6,7 +6,7 @@ import { env } from '@/lib/env';
  * We gebruiken de Metadata API van Xano: daarmee kun je records lezen en
  * schrijven zonder in hun visuele editor endpoints te bouwen. Dat scheelt een
  * middag klikken, en belangrijker: er komt geen enkele Xano-URL in de browser.
- * Alle verkeer loopt server-side met een token dat alleen op Netlify staat.
+ * Alle verkeer loopt server-side met een token dat alleen op de server staat.
  *
  * Wat dat betekent voor de beveiliging: Xano kent geen RLS zoals Postgres.
  * De grendel zit hier, in de code — elke aanroep hieronder gebeurt pas nadat
@@ -14,9 +14,7 @@ import { env } from '@/lib/env';
  * browser Xano rechtstreeks kan bereiken.
  *
  * De hoogfrequente dingen (de wachtrij naar je laptop, de hartslag) staan
- * bewust NIET hier maar in Netlify Blobs — Xano's gratis plan staat maar
- * tien verzoeken per twintig seconden toe en daar loopt een pollende laptop
- * meteen doorheen.
+ * in Redis zodat regelmatig pollen deze database niet belast.
  */
 
 export type XanoRecord = Record<string, unknown> & { id?: number | string };
@@ -50,6 +48,7 @@ async function api(pad: string, init: RequestInit = {}) {
       ...(init.headers || {}),
     },
     cache: 'no-store',
+    signal: init.signal ?? AbortSignal.timeout(15_000),
   });
 
   const tekst = await res.text();
@@ -119,16 +118,15 @@ export async function maak<T = XanoRecord>(
  * is precies het soort fout dat je pas weken later merkt.
  *
  * Daarom geef je hier altijd de bestaande rij mee: alles wat je niet noemt
- * blijft dan staan. `haalEerst` doet dat voor je als je hem niet bij de hand
- * hebt — dat kost een extra verzoek, maar geen verdwenen gegevens.
+ * blijft dan staan. `werkVeldBij` haalt de bestaande rij eerst op als je die nog niet hebt.
  */
 export async function werkBij<T = XanoRecord>(
   tabel: keyof typeof env.xano.tabellen,
   id: number | string,
   velden: Record<string, unknown>,
-  bestaand?: XanoRecord,
+  bestaand: XanoRecord,
 ): Promise<T> {
-  const volledig = bestaand ? { ...bestaand, ...velden } : velden;
+  const volledig = { ...bestaand, ...velden };
   // De id hoort in het pad, niet in de body.
   const { id: _weg, ...body } = volledig as XanoRecord;
   return await api(`/table/${tabelId(tabel)}/content/${id}`, {

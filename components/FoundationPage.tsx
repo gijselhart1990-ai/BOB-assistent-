@@ -24,6 +24,7 @@ export function FoundationPage({ eyebrow, title, intro, cards, children }: {
         </div>
         <Link className="foundation-back" href="/">← Dashboard</Link>
       </header>
+      <p className="empty">In ontwikkeling: dit scherm beschrijft de module. Je kunt hier nog geen taken beheren, workflows uitvoeren of een volledig auditlog bekijken.</p>
       <div className="foundation-page-grid">
         {cards.map((card) => (
           <article className="foundation-detail-card" key={card.title}>

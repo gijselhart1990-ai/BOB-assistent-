@@ -1,3 +1,5 @@
+import { haalPubliekePagina } from './fetch-public';
+
 /**
  * Een webpagina ophalen en er leesbare tekst uit halen.
  *
@@ -45,37 +47,12 @@ export async function webLees(url: string) {
   try { doel = new URL(String(url)); }
   catch { throw Object.assign(new Error(`Geen geldige URL: ${url}`), { status: 400 }); }
 
-  if (!['http:', 'https:'].includes(doel.protocol)) {
-    throw Object.assign(new Error('Alleen http en https worden gelezen.'), { status: 400 });
-  }
-  // Geen verzoeken naar interne adressen: deze code draait op een server die
-  // in een netwerk staat waar jij niets te zoeken hebt, en andersom.
-  if (/^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|\[?::1|metadata)/i.test(doel.hostname)) {
-    throw Object.assign(new Error('Adressen op het lokale netwerk worden niet opgehaald.'), { status: 400 });
-  }
-
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 20_000);
   try {
-    const res = await fetch(doel, {
-      signal: ctrl.signal,
-      redirect: 'follow',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; BOB/2.0)',
-        Accept: 'text/html,application/xhtml+xml,text/plain;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'nl,en;q=0.8',
-      },
-    });
-    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-
-    const type = res.headers.get('content-type') || '';
-    if (!/text\/html|text\/plain|application\/xhtml/i.test(type)) {
-      return { url: res.url, title: '', text: `(Geen leesbare pagina — inhoudstype ${type.split(';')[0]})` };
-    }
-    const buf = await res.arrayBuffer();
-    if (buf.byteLength > MAX_BYTES) throw new Error('Pagina is te groot om te lezen.');
-    const html = new TextDecoder('utf-8').decode(buf);
-    return { url: res.url, title: titelUit(html), text: extractText(html) };
+    const res = await haalPubliekePagina(doel, MAX_BYTES, ctrl.signal);
+    if (res.html === null) return { url: res.url, title: '', text: '(Geen leesbare pagina)' };
+    return { url: res.url, title: titelUit(res.html), text: extractText(res.html) };
   } catch (err) {
     const e = err as Error;
     if (e.name === 'AbortError') throw new Error('De pagina reageerde niet binnen 20 seconden.');

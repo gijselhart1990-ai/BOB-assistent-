@@ -21,20 +21,7 @@ const ok = (naam: string, waar: boolean) => {
   if (!waar) mislukt = true;
 };
 
-/** Wat de middleware doet, met Web Crypto in plaats van node:crypto. */
-async function middlewareLeest(waarde: string, geheim: string) {
-  const [emailB64, tot, sig] = waarde.split('.');
-  if (Number(tot) < Date.now()) return false;
-  const sleutel = await crypto.subtle.importKey(
-    'raw', new TextEncoder().encode(geheim), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
-  );
-  const ruw = await crypto.subtle.sign('HMAC', sleutel, new TextEncoder().encode(`${emailB64}.${tot}`));
-  let s = '';
-  const b = new Uint8Array(ruw);
-  for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
-  const verwacht = btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  return verwacht === sig;
-}
+import { sessieGeldig as middlewareLeest } from '../middleware';
 
 async function main() {
   const { maakSessie, leesSessie, maakInlogToken, leesInlogToken, tekenState, leesState } =

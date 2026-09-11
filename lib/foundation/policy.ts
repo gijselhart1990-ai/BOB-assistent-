@@ -1,9 +1,9 @@
 import type { ApprovalRequest, RiskLevel } from './types';
 
-const IMPACT_ACTIONS = new Set(['send', 'create', 'update', 'delete', 'schedule', 'publish', 'invoice', 'pay']);
+const READ_ACTIONS = new Set(['read', 'list', 'search', 'get', 'summarize']);
 
 export function requiresApproval(action: string, risk: RiskLevel = 'write') {
-  return risk !== 'read' || IMPACT_ACTIONS.has(action.toLowerCase());
+  return risk !== 'read' || !READ_ACTIONS.has(action.trim().toLowerCase());
 }
 
 export function createApprovalRequest(input: ApprovalRequest): ApprovalRequest & { required: true } {
