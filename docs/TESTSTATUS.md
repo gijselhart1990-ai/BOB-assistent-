@@ -78,3 +78,13 @@ en accountwisselen moet na de migratie en deployment worden getest.
 De migratie 002_chat_turns.sql is inmiddels via de Vercel-query-editor uitgevoerd:
 tabel en index gaven beide een succesvolle melding. Alleen-lezen is hersteld.
 Live acceptatie volgt na de deployment.
+
+## Live chatopslag bevestigd — 11 september 2026
+
+Op preview 15149e0 kwam de fictieve testbeurt van de vorige dag terug na het
+openen van een nieuw dashboardtabblad. Bij het andere Google-account verscheen
+deze beurt niet; na terugwisselen was hij opnieuw beschikbaar. Op een vervolgvraag
+gaf BOB het eerder opgeslagen fictieve testwoord correct terug. Daarmee zijn
+opslag, terugladen, accountscheiding en gebruik van historie in de AI-aanroep
+live bevestigd. Tests voor gelijktijdige verzoeken en meerdere browservensters
+blijven afzonderlijk uit te voeren.
