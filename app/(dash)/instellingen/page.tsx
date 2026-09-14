@@ -51,7 +51,7 @@ function Inhoud() {
                   aan={Boolean(status.data?.gekoppeld?.microsoft)}
                   klaar={Boolean(caps.microsoft)}
                   href="/api/oauth/microsoft/start"
-                  uitleg="Alleen de client-ID is verplicht; een secret is optioneel." />
+                  uitleg="Leesrechten op Outlook-mail en agenda, alleen binnen de ingestelde werkcontext." />
                 <Regel titel="Todoist" aan={Boolean(caps.todoist)} klaar={Boolean(caps.todoist)}
                   uitleg="Werkt via een API-token in de omgevingsvariabelen." />
                 <Regel titel="Claude (het brein)" aan={Boolean(caps.brein)} klaar={Boolean(caps.brein)}
@@ -63,7 +63,7 @@ function Inhoud() {
               </>
             )}
             <p className="rail-tekst" style={{ marginTop: 14 }}>
-              Sleutels staan als omgevingsvariabelen bij Netlify, nooit in de code en nooit in je browser.
+              Sleutels staan als omgevingsvariabelen bij Vercel, nooit in de code en nooit in je browser.
               Wijzigen doe je daar; daarna een nieuwe deploy.
             </p>
           </div>
@@ -74,7 +74,7 @@ function Inhoud() {
             rechts={<span className={`pill${brug.online ? '' : ' muted'}`}>{brug.online ? 'online' : 'offline'}</span>} />
           <div className="card-body">
             <p className="rail-tekst">
-              Netlify draait in een datacenter en kan geen browservenster openen of WhatsApp Web aansturen.
+              Vercel draait in een datacenter en kan geen browservenster openen of WhatsApp Web aansturen.
               Je laptop kan dat wel. Het bridge-programma daar vraagt elke seconde of er werk voor hem is —
               alleen uitgaand verkeer, geen open poort op je router.
             </p>

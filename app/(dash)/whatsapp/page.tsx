@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
+
 import { Ico, SchermKop, SchermVoet, NietGekoppeld, Skelet } from '@/components/ui';
 import { BobRail } from '@/components/BobRail';
 import { useApi } from '@/components/hooks';

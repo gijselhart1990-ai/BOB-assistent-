@@ -1,38 +1,71 @@
-# GitHub en Vercel
+# Deployment op Vercel
 
-## Productiestraat
+Gebruik Node.js 22.12 of hoger, npm ci en npm run verify. Werk via preview en PR.
 
-`feature branch → pull request → GitHub Actions → review → main → Vercel production`
+## Tijdelijke opslag aansluiten
 
-Vercel-project: `gijselhart1990-ai/bob-assistent`  
-Productie: `https://bob-assistent.vercel.app/`
+Open Vercel > bob-assistent > Storage > Create Database > Upstash Redis.
+Maak een afzonderlijke testdatabase en verbind uitsluitend de Preview-omgeving.
+Vercel injecteert KV_REST_API_URL en KV_REST_API_TOKEN. Ook de namen
+UPSTASH_REDIS_REST_URL en UPSTASH_REDIS_REST_TOKEN worden ondersteund.
+Gebruik het read/write-token; alleen lezen is onvoldoende voor inlogbeveiliging.
+Houd database-eviction uit: eenmalige tokens mogen niet vroegtijdig verdwijnen.
+Na het verbinden: redeploy de onderhoudsbranch.
 
-## Vercel-instellingen
+De aanbieder is Upstash, beheerd via Vercel Marketplace. Netlify is niet meer
+nodig voor deze opslag. Er is geen overstap naar openbare Vercel Blob-bestanden.
 
-- Framework preset: Next.js.
-- Install command: `npm ci`.
-- Build command: `npm run build`.
-- Node.js: 20 of hoger.
-- Production branch: `main`.
-- Preview deployments voor pull requests.
+## Werking en migratie
 
-Zet runtimegeheimen in Vercel Environment Variables, gescheiden voor Development, Preview en Production. Gebruik nooit echte sleutels in GitHub, `.env.example`, screenshots of chatberichten.
+lib/storage.ts gebruikt Redis REST over HTTPS, SET NX voor eenmalige tokens en
+Lua voor atomaire versiecontrole. Netwerkfouten geven 503; er is geen lokale fallback.
+Jobs verlopen na een uur, hartslag na vijf minuten, inlogpogingen en gebruikte
+links na 24 uur. Inloglinks zelf zijn standaard tien minuten geldig.
 
-## Verificatie vóór merge
+Preview krijgt een namespace per project en branch; productie een eigen namespace.
+De wissel importeert geen bestaande Netlify-records. Laat bestaande opdrachten
+uitlopen en vraag nieuwe inloglinks aan na omschakeling. De bestaande database
+voor OAuth-tokens, berichten en instellingen is nog Xano; die gegevens zijn niet
+stilzwijgend naar Redis gekopieerd. Een Xano-migratie vereist een apart datamodel
+met export/import en controle op aantallen en eigenaarschap.
 
-```bash
-npm ci
-npm run typecheck
-npm test
-npm run build
-```
+## Inloggen en testen
 
-De GitHub-workflow voert dezelfde controles uit. Een succesvolle push naar `main` triggert de bestaande Vercel-koppeling. Controleer daarna deploymentstatus en `/api/health`.
+### Google-accounts in Preview
 
-## Vercel-plugin
+Stel BOB_PREVIEW_GOOGLE_CLIENT_ID en BOB_PREVIEW_GOOGLE_CLIENT_SECRET uitsluitend
+voor de onderhoudsbranch in. BOB_ACCOUNT_ENCRYPTION_KEY is een aparte willekeurige
+32-byte sleutel als 64 hextekens. Bewaar deze duurzaam: bij vervangen kunnen
+bestaande tokens niet meer worden ontsleuteld en moeten accounts opnieuw koppelen.
+Neon levert DATABASE_URL uitsluitend aan Preview.
 
-De ontwikkelplugin is geïnstalleerd met `npx plugins add vercel/vercel-plugin`. De agentomgeving moet na installatie opnieuw worden gestart om de commando's en deploymenttools in een nieuwe sessie te laden.
+Voer migrations/001_google_accounts.sql uit in de lege previewdatabase. Als
+DATABASE_URL veilig lokaal beschikbaar is, kan dat met VERCEL_ENV=preview en
+node scripts/migrate-google-accounts.mjs. Er worden geen Xano-records geïmporteerd.
+De OAuth-startroute controleert de database voordat hij Google opent.
 
-## Migratiepunt
+Google koppelt op de geverifieerde subject-ID, met aparte tokens per BOB-eigenaar
+en omgeving. De accountkiezer gebruikt een cookie die per verzoek op eigenaarschap
+wordt gecontroleerd. Wisselen herlaadt het dashboard; caches en eventuele
+chatgeschiedenis zijn per Google-account gescheiden. De huidige preview bewaart
+nog geen chatgeschiedenis omdat Xano daar uitgeschakeld is.
 
-De huidige bridge-wachtrij gebruikt Netlify Blobs. Voor volledige Vercel-productie wordt dit in fase 2 vervangen door een provider-onafhankelijke queue/persistente worker. Tot die migratie blijven bridge- en WhatsApp-browseracties experimenteel; de dashboardfoundation en korte API-routes kunnen wel op Vercel draaien.
+Live acceptatie vereist twee eigen Google-accounts, tokenverversing, controle op
+behoud van het eerste account en afwijzing van een onbekende accountselectie.
+Ontkoppelen via de interface en tokenrotatie blijven vervolgwerk.
+
+Voor alleen AI: voeg BOB_PREVIEW_ANTHROPIC_API_KEY als Secret toe aan Vercel,
+uitsluitend Preview en de onderhoudsbranch. Gebruik een afzonderlijke Anthropic-
+testsleutel. Laat BOB_PREVIEW_INTEGRATIONS uit. De app gebruikt dan deze testsleutel
+en de directe Anthropic API; alle overige externe koppelingen blijven uit.
+BOB_PREVIEW_ANTHROPIC_MODEL is optioneel (standaard claude-sonnet-5).
+Na opslaan is een nieuwe deploy nodig. Test met een neutrale vraag zonder
+persoonlijke gegevens. Sleutel, modeltoegang en beschikbaar tegoed moeten live
+worden gecontroleerd; unit tests bewijzen geen werkende providerverbinding.
+
+Stel BOB_SESSION_SECRET, BOB_ALLOWED_EMAILS, BOB_LOGIN_CODE en NEXT_PUBLIC_SITE_URL
+uitsluitend voor de testbranch in. Externe integraties zijn in preview standaard
+uitgeschakeld. BOB_PREVIEW_INTEGRATIONS=enabled mag pas na configuratie van testaccounts.
+Voer TASK-003 uit. Controleer opslaguitval, dubbele callbacks, gelijktijdige claims
+en herstel. Unit tests gebruiken een nagebootste REST-transportlaag; test de Lua-
+operatie ook tegen de aangesloten Redis-database vóór productiegebruik.

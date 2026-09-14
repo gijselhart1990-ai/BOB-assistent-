@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import { lees, schrijf, wis, sleutels } from '@/lib/blobs';
+import { lees, schrijf, wis, sleutels, wijzig } from '@/lib/storage';
 
 /**
  * De brug naar je laptop.
  *
- * Netlify draait in een datacenter en kan geen browservenster openen of
+ * Vercel draait in een datacenter en kan geen browservenster openen of
  * WhatsApp Web aansturen. Je laptop kan dat wel, maar is van buitenaf niet
  * bereikbaar: router, firewall, wisselend IP.
  *
@@ -12,9 +12,8 @@ import { lees, schrijf, wis, sleutels } from '@/lib/blobs';
  * vraagt elke seconde of er werk is, voert het uit en schrijft het antwoord
  * terug. Geen open poort, niets te configureren op je router.
  *
- * Dit staat in Netlify Blobs en niet in Xano: een pollende laptop maakt zo
- * veel verzoeken dat Xano's gratis limiet (tien per twintig seconden) er
- * binnen een seconde doorheen is.
+ * Redis bewaart deze tijdelijke opdrachten en hartslag. Zo belast het
+ * regelmatige pollen niet de database voor berichten en provider-tokens.
  */
 
 const WACHTRIJ = 'bob-wachtrij';
@@ -50,6 +49,7 @@ export type BrugStatus = {
   machine: string | null;
   versie: string | null;
   mogelijk: Record<string, boolean>;
+  error?: string;
 };
 
 const jobSleutel = (gebruiker: string, id: string) => `${slug(gebruiker)}/${id}`;
@@ -58,6 +58,7 @@ const slug = (s: string) => s.replace(/[^a-z0-9]+/gi, '_').toLowerCase();
 /* ---------------- hartslag ---------------- */
 
 export async function brugStatus(gebruiker: string): Promise<BrugStatus> {
+  try {
   const h = await lees<{ laatste: number; machine?: string; versie?: string; mogelijk?: Record<string, boolean> }>(
     HARTSLAG, slug(gebruiker),
   );
@@ -69,6 +70,9 @@ export async function brugStatus(gebruiker: string): Promise<BrugStatus> {
     versie: h.versie ?? null,
     mogelijk: h.mogelijk ?? {},
   };
+  } catch {
+    return { online: false, laatste: null, machine: null, versie: null, mogelijk: {}, error: 'Opslag voor de laptopverbinding is niet beschikbaar.' };
+  }
 }
 
 export async function klopAan(gebruiker: string, info: { machine?: string; versie?: string; mogelijk?: Record<string, boolean> }) {
@@ -144,20 +148,20 @@ export async function volgendeJob(gebruiker: string): Promise<{ id: string; soor
     if (j.status !== 'wacht') continue;
     if (j.bevestigingNodig && j.bevestigd !== true) continue;
 
-    j.status = 'bezig';
-    await schrijf(WACHTRIJ, jobSleutel(gebruiker, j.id), j);
-    return { id: j.id, soort: j.soort, invoer: j.invoer };
+    const geclaimd = await wijzig<Job>(WACHTRIJ, jobSleutel(gebruiker, j.id), nu =>
+      nu && nu.gebruiker === gebruiker && nu.status === 'wacht' && nu.verlooptOp > Date.now()
+        && (!nu.bevestigingNodig || nu.bevestigd === true) ? { ...nu, status: 'bezig' } : null);
+    if (geclaimd) return { id: j.id, soort: j.soort, invoer: j.invoer };
   }
   return null;
 }
 
 export async function meldResultaat(gebruiker: string, id: string, ok: boolean, resultaat?: unknown, fout?: string) {
-  const j = await lees<Job>(WACHTRIJ, jobSleutel(gebruiker, id));
-  if (!j) throw Object.assign(new Error('Onbekende opdracht'), { status: 404 });
-  j.status = ok ? 'klaar' : 'fout';
-  j.resultaat = ok ? resultaat : undefined;
-  j.fout = ok ? undefined : String(fout || 'Onbekende fout');
-  await schrijf(WACHTRIJ, jobSleutel(gebruiker, id), j);
+  const gelukt = await wijzig<Job>(WACHTRIJ, jobSleutel(gebruiker, id), j =>
+    j && j.gebruiker === gebruiker && j.status === 'bezig' && j.verlooptOp > Date.now()
+      ? { ...j, status: ok ? 'klaar' : 'fout', resultaat: ok ? resultaat : undefined,
+        fout: ok ? undefined : String(fout || 'Onbekende fout') } : null);
+  if (!gelukt) throw Object.assign(new Error('Deze opdracht is niet meer actief'), { status: 409 });
 }
 
 /* ---------------- toestemming ---------------- */
@@ -186,17 +190,14 @@ export async function openBevestiging(gebruiker: string) {
 }
 
 export async function beantwoordBevestiging(gebruiker: string, jobId: string, toegestaan: boolean) {
-  const j = await lees<Job>(WACHTRIJ, jobSleutel(gebruiker, jobId));
-  if (!j || j.status !== 'wacht') {
-    throw Object.assign(new Error('Deze actie staat niet meer open'), { status: 409 });
-  }
-  if (toegestaan) {
-    j.bevestigd = true;
-  } else {
-    j.bevestigd = false;
-    j.status = 'klaar';
-    j.resultaat = { uitgevoerd: false, reden: 'Je hebt dit niet toegestaan.' };
-  }
-  await schrijf(WACHTRIJ, jobSleutel(gebruiker, jobId), j);
+  const gelukt = await wijzig<Job>(WACHTRIJ, jobSleutel(gebruiker, jobId), j => {
+    if (!j || j.gebruiker !== gebruiker || j.status !== 'wacht' || !j.bevestigingNodig
+        || j.bevestigd !== null || j.verlooptOp <= Date.now()) return null;
+    return toegestaan ? { ...j, bevestigd: true } : {
+      ...j, bevestigd: false, status: 'klaar',
+      resultaat: { uitgevoerd: false, reden: 'Je hebt dit niet toegestaan.' },
+    };
+  });
+  if (!gelukt) throw Object.assign(new Error('Deze actie staat niet meer open'), { status: 409 });
   return { ok: true };
 }

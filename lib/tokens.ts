@@ -1,4 +1,6 @@
 import { eersteOfNull, zetNeer } from '@/lib/xano';
+import { gekozenGoogleAccount, meerdereGoogleAccounts } from './google-accounts';
+import { googleAccountStore } from './google-account-store';
 
 export type OauthToken = {
   access_token?: string | null;
@@ -10,14 +12,24 @@ export type OauthToken = {
 
 /**
  * OAuth-tokens staan in Xano, en alleen de server komt erbij. Ze staan
- * bewust niet in Netlify Blobs: dit zijn de sleutels tot je mail en agenda,
+ * bewust niet in de tijdelijke Redis-opslag: dit zijn de sleutels tot je mail en agenda,
  * en die horen in een database die je kunt inzien en opschonen.
  */
 export async function leesToken(email: string, provider: 'google' | 'microsoft'): Promise<OauthToken | null> {
+  if (provider === 'google' && meerdereGoogleAccounts()) {
+    const account = await gekozenGoogleAccount(email);
+    return account ? googleAccountStore(email).read(account.subject) : null;
+  }
   return eersteOfNull<OauthToken>('oauth_tokens', { gebruiker: email, provider });
 }
 
 export async function schrijfToken(email: string, provider: 'google' | 'microsoft', t: OauthToken) {
+  if (provider === 'google' && meerdereGoogleAccounts()) {
+    const account = await gekozenGoogleAccount(email);
+    if (!account) throw new Error('Google-account niet gevonden.');
+    await googleAccountStore(email).save(account.subject, account.email, t);
+    return;
+  }
   await zetNeer('oauth_tokens', { gebruiker: email, provider }, {
     access_token: t.access_token ?? null,
     refresh_token: t.refresh_token ?? null,
@@ -28,5 +40,4 @@ export async function schrijfToken(email: string, provider: 'google' | 'microsof
   });
 }
 
-export const verlopen = (iso?: string | null, margeMs = 60_000) =>
-  !iso || new Date(iso).getTime() - margeMs < Date.now();
+export { verlopen } from './oauth-validation';

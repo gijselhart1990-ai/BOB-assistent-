@@ -4,7 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { Ico, SchermKop, SchermVoet, NietGekoppeld, Skelet } from '@/components/ui';
 import { BobRail } from '@/components/BobRail';
 import { useApi } from '@/components/hooks';
-import { hhmm, initialen } from '@/lib/client';
+
 import { MailLijst, MailLezen, type Bericht } from '@/components/Mail';
 
 export default function MailScherm() {

@@ -36,12 +36,12 @@ async function handtekeningKlopt(kern: string, sig: string, geheim: string) {
   return verschil === 0;
 }
 
-async function sessieGeldig(waarde: string | undefined, geheim: string) {
+export async function sessieGeldig(waarde: string | undefined, geheim: string) {
   if (!waarde) return false;
   const stukken = waarde.split('.');
   if (stukken.length !== 3) return false;
   const [emailB64, tot, sig] = stukken;
-  if (Number(tot) < Date.now()) return false;
+  if (!Number.isSafeInteger(Number(tot)) || Number(tot) <= Date.now()) return false;
   return handtekeningKlopt(`${emailB64}.${tot}`, sig, geheim);
 }
 

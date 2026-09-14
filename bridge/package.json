@@ -5,11 +5,15 @@
   "type": "module",
   "description": "Draait op je eigen laptop en voert de opdrachten uit die de cloud niet kan.",
   "scripts": {
-    "start": "node agent.mjs"
+    "start": "node agent.mjs",
+    "check": "node --check agent.mjs && node --check link-whatsapp.mjs"
   },
   "optionalDependencies": {
     "playwright-core": "^1.49.0",
-    "whatsapp-web.js": "^1.26.0",
-    "qrcode": "^1.5.4"
+    "qrcode": "^1.5.4",
+    "whatsapp-web.js": "^1.34.7"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

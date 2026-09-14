@@ -16,6 +16,7 @@ import { useSearchParams } from 'next/navigation';
  */
 
 const REDENEN: Record<string, string> = {
+  opslag: 'Inloggen is tijdelijk niet beschikbaar. Probeer het later opnieuw.',
   config: 'De site mist nog BOB_SESSION_SECRET. Zie SETUP.md.',
   ongeldig: 'Die link is niet geldig meer.',
   gebruikt: 'Die link is al een keer gebruikt. Vraag een nieuwe aan.',

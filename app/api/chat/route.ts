@@ -5,9 +5,11 @@ import { vraagBob } from '@/lib/ai/claude';
 import { google } from '@/lib/connectors/google';
 import { microsoft } from '@/lib/connectors/microsoft';
 import { todoist } from '@/lib/connectors/todoist';
+import { gekozenGoogleAccount, meerdereGoogleAccounts } from '@/lib/google-accounts';
+import { chatStore } from '@/lib/chat-store';
 
 export const dynamic = 'force-dynamic';
-// De tool-lus kan een paar rondes doen; Netlify's standaardlimiet is te krap.
+// De tool-lus kan een paar rondes doen binnen de Vercel-functie.
 export const maxDuration = 120;
 
 const tijd = (iso?: string | null) => {
@@ -49,6 +51,17 @@ async function liveContext(userId: string) {
 
 type Bericht = { rol: string; inhoud: string; aangemaakt?: number };
 
+export async function GET() {
+  try {
+    const u = await eisGebruiker();
+    if (!meerdereGoogleAccounts()) return json({ ok: true, messages: [] });
+    const account = await gekozenGoogleAccount(u.id);
+    if (!account) return json({ ok: true, messages: [] });
+    const messages = await chatStore(u.id, account.subject).list();
+    return json({ ok: true, messages });
+  } catch (err) { return fout(err); }
+}
+
 /**
  * Eén doorlopend gesprek, geen mappen en geen gesprekslijst — het dashboard
  * is geen chat-app. Dat scheelt hier een hele tabel: er is geen
@@ -61,19 +74,26 @@ type Bericht = { rol: string; inhoud: string; aangemaakt?: number };
 export async function POST(req: Request) {
   try {
     const u = await eisGebruiker();
-    const sleutel = sleutelVan(u);
+    const eigenaar = sleutelVan(u);
+    const account = meerdereGoogleAccounts() ? await gekozenGoogleAccount(u.id) : null;
+    if (meerdereGoogleAccounts() && !account) {
+      return json({ ok: false, error: 'Kies eerst een gekoppeld Google-account voor dit gesprek.' }, { status: 409 });
+    }
+    const sleutel = meerdereGoogleAccounts() ? JSON.stringify([eigenaar, 'google', account?.subject ?? null]) : eigenaar;
+    const store = account ? chatStore(u.id, account.subject) : null;
 
     const body = await req.json().catch(() => ({}));
     const vraag = String(body?.message || '').trim();
     if (!vraag) return json({ ok: false, error: 'Lege vraag' }, { status: 400 });
+    if (vraag.length > 8000) return json({ ok: false, error: 'Je vraag mag maximaal 8000 tekens bevatten.' }, { status: 400 });
 
     // Geschiedenis en persoonlijke context tegelijk ophalen. Valt Xano weg,
     // dan praat BOB gewoon zonder geheugen door in plaats van te weigeren.
     const [historie, inst] = await Promise.all([
-      zoek<Bericht>('berichten', { gebruiker: sleutel }, {
+      store ? store.list().then(rows => rows.slice(-10).reverse()) : zoek<Bericht>('berichten', { gebruiker: sleutel }, {
         limiet: 10, sorteer: { veld: 'aangemaakt', richting: 'desc' },
       }).catch(() => [] as Bericht[]),
-      eersteOfNull<{ context?: string }>('instellingen', { gebruiker: sleutel }).catch(() => null),
+      eersteOfNull<{ context?: string }>('instellingen', { gebruiker: eigenaar }).catch(() => null),
     ]);
 
     const context = body?.withContext === false ? '' : await liveContext(u.id);
@@ -86,17 +106,18 @@ export async function POST(req: Request) {
       extra: inst?.context ?? null,
     });
 
-    // Opslaan mag mislukken zonder dat je je antwoord kwijtraakt: dat staat
-    // al in het scherm. Een stille catch is hier eerlijker dan een 500.
+    // Wacht op opslag voordat de serverless functie stopt. Het antwoord blijft
+    // beschikbaar als opslag faalt, maar de client krijgt de opslagstatus mee.
     const nu = Date.now();
-    void Promise.all([
+    const opslagResultaten = await Promise.allSettled(store ? [store.save(vraag, antwoord.text)] : [
       maak('berichten', { gebruiker: sleutel, rol: 'user', inhoud: vraag, aangemaakt: nu }),
       maak('berichten', {
         gebruiker: sleutel, rol: 'assistant', inhoud: antwoord.text,
         stappen: JSON.stringify(antwoord.steps ?? []), aangemaakt: nu + 1,
       }),
-    ]).catch(() => { /* geheugen kwijt, antwoord niet */ });
+    ]);
+    const opgeslagen = opslagResultaten.every(resultaat => resultaat.status === 'fulfilled');
 
-    return json({ ok: true, text: antwoord.text, steps: antwoord.steps, usage: antwoord.usage });
+    return json({ ok: true, text: antwoord.text, steps: antwoord.steps, usage: antwoord.usage, opgeslagen });
   } catch (err) { return fout(err); }
 }

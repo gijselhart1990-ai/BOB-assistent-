@@ -6,15 +6,14 @@ import { NextResponse } from 'next/server';
  */
 export function fout(err: unknown) {
   const e = err as { message?: string; status?: number };
-  const status = typeof e?.status === 'number' ? e.status : 500;
-  return NextResponse.json({ ok: false, error: e?.message || 'Onbekende fout' }, { status });
+  const status = Number.isInteger(e?.status) && e.status! >= 400 && e.status! <= 599 ? e.status! : 500;
+  return json({ ok: false, error: status === 500 ? 'Er ging iets mis. Probeer het opnieuw.' : e?.message || 'Onbekende fout' }, { status });
 }
 
 export function json(data: unknown, init?: ResponseInit) {
-  return NextResponse.json(data, {
-    ...init,
-    headers: { 'Cache-Control': 'no-store', ...(init?.headers || {}) },
-  });
+  const headers = new Headers(init?.headers);
+  headers.set('Cache-Control', 'no-store');
+  return NextResponse.json(data, { ...init, headers });
 }
 
 /** Eén kapotte connector mag nooit het hele dashboard meenemen. */

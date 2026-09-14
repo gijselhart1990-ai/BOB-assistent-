@@ -51,7 +51,7 @@ export function leesSessie(waarde?: string | null): string | null {
   if (stukken.length !== 3) return null;
   const [emailB64, tot, sig] = stukken;
   if (!klopt(`${emailB64}.${tot}`, sig)) return null;
-  if (Number(tot) < Date.now()) return null;
+  if (!Number.isSafeInteger(Number(tot)) || Number(tot) <= Date.now()) return null;
   try { return Buffer.from(emailB64, 'base64url').toString(); } catch { return null; }
 }
 
@@ -85,7 +85,7 @@ export function leesInlogToken(token: string): { email: string; id: string } | n
   if (stukken.length !== 4) return null;
   const [emailB64, tot, id, sig] = stukken;
   if (!klopt(`${emailB64}.${tot}.${id}`, sig)) return null;
-  if (Number(tot) < Date.now()) return null;
+  if (!Number.isSafeInteger(Number(tot)) || Number(tot) <= Date.now()) return null;
   try { return { email: Buffer.from(emailB64, 'base64url').toString(), id }; } catch { return null; }
 }
 
@@ -101,6 +101,6 @@ export function leesState(state: string, maxLeeftijdMs = 10 * 60_000): string | 
   if (stukken.length !== 4) return null;
   const [emailB64, ts, nonce, sig] = stukken;
   if (!klopt(`${emailB64}.${ts}.${nonce}`, sig)) return null;
-  if (Date.now() - Number(ts) > maxLeeftijdMs) return null;
+  if (!Number.isSafeInteger(Number(ts)) || Number(ts) > Date.now() || Date.now() - Number(ts) > maxLeeftijdMs) return null;
   try { return Buffer.from(emailB64, 'base64url').toString(); } catch { return null; }
 }

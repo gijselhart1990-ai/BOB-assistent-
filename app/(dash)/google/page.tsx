@@ -39,7 +39,7 @@ export default function GoogleScherm() {
                 </a>
               )) : <p className="empty">Geen ongelezen berichten.</p>}
           </div>
-          <footer className="card-foot"><a href="https://mail.google.com" target="_blank" rel="noopener">Alle e-mails bekijken <span className="arrow">↗</span></a></footer>
+          <footer className="card-foot"><a href="/api/google/open?service=gmail" target="_blank" rel="noopener">Alle e-mails bekijken <span className="arrow">↗</span></a></footer>
         </div>
 
         <div className="card">
@@ -55,7 +55,7 @@ export default function GoogleScherm() {
                 </div>
               )) : <p className="empty">Geen Google-afspraken vandaag.</p>}
           </div>
-          <footer className="card-foot"><a href="https://calendar.google.com" target="_blank" rel="noopener">Volledige agenda <span className="arrow">↗</span></a></footer>
+          <footer className="card-foot"><a href="/api/google/open?service=calendar" target="_blank" rel="noopener">Volledige agenda <span className="arrow">↗</span></a></footer>
         </div>
 
         <div className="card">

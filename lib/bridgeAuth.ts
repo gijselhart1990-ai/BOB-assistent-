@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { eersteOfNull, werkBij, type XanoRecord } from '@/lib/xano';
+import { staatOpLijst } from '@/lib/auth';
 
 /**
  * Het bridge-programma op je laptop logt niet in met een e-maillink; het
@@ -21,7 +22,7 @@ export async function gebruikerVanBrugToken(req: Request): Promise<string> {
   const rij = await eersteOfNull<XanoRecord & { id: number; gebruiker: string }>('bridge_tokens', {
     token_hash: hashToken(token),
   });
-  if (!rij) throw new GeenBrugToken();
+  if (!rij || !staatOpLijst(rij.gebruiker)) throw new GeenBrugToken();
 
   // Bijhouden wanneer hij voor het laatst gebruikt is; handig als je ooit wilt
   // zien of er nog een oud token rondslingert. De hele rij gaat mee, want een

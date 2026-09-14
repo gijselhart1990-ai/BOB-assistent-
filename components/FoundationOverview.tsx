@@ -7,14 +7,14 @@ export function FoundationOverview() {
       <div className="foundation-heading">
         <div>
           <span className="foundation-kicker">BOB 1.0</span>
-          <h2 id="foundation-title">Foundation actief</h2>
+          <h2 id="foundation-title">Modules in ontwikkeling</h2>
         </div>
-        <span className="foundation-mode"><i /> Demo-safe</span>
+        <span className="foundation-mode"><i /> In opbouw</span>
       </div>
       <div className="foundation-grid">
         {BOB_MODULES.filter((module) => module.phase === 1).map((module) => (
           <Link href={module.route} className="foundation-module" key={module.id}>
-            <span className="foundation-module-state">{module.status === 'foundation' ? 'Basis gereed' : module.status}</span>
+            <span className="foundation-module-state">{module.status === 'foundation' ? 'Basis aanwezig' : module.status}</span>
             <strong>{module.name}</strong>
             <small>{module.description}</small>
           </Link>

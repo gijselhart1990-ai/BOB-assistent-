@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Ico } from '@/components/ui';
 import { haal } from '@/lib/client';
+import { GoogleAccountPicker } from './GoogleAccountPicker';
 
 /* ============================================================
    De schil om elk scherm: balk bovenin, zijbalk, spraak, toasts
@@ -64,6 +65,7 @@ export function Shell({ email, children }: { email: string; children: React.Reac
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [gesprek, setGesprek] = useState<Bericht[]>([]);
   const [bezig, setBezig] = useState(false);
+  const [historieLaden, setHistorieLaden] = useState(true);
   const [vraagTekst, setVraagTekst] = useState('');
   const [brugOnline, setBrugOnline] = useState(false);
   const [badges, setBadges] = useState<Record<string, number>>({});
@@ -77,6 +79,17 @@ export function Shell({ email, children }: { email: string; children: React.Reac
     setToasts((t) => [...t, { id, tekst, soort }]);
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), soort === 'err' ? 7000 : 3800);
   }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    haal<{ messages: { rol: string; inhoud: string }[] }>('/api/chat', { signal: controller.signal })
+      .then(r => {
+        if (!controller.signal.aborted) setGesprek(r.messages.map(m => ({ rol: m.rol === 'assistant' ? 'bob' : 'me', tekst: m.inhoud })));
+      })
+      .catch(() => { if (!controller.signal.aborted) toast('Eerdere gesprekken konden niet worden geladen.', 'err'); })
+      .finally(() => { if (!controller.signal.aborted) setHistorieLaden(false); });
+    return () => controller.abort();
+  }, [toast]);
 
   /* ---- thema onthouden ---- */
   useEffect(() => {
@@ -127,7 +140,7 @@ export function Shell({ email, children }: { email: string; children: React.Reac
   /* ---- vragen aan BOB ---- */
   const vraag = useCallback(async (tekst: string) => {
     const q = tekst.trim();
-    if (!q || bezig) return;
+    if (!q || bezig || historieLaden) return;
     setBezig(true);
     setGesprek((g) => [...g, { rol: 'me', tekst: q }]);
 
@@ -138,6 +151,7 @@ export function Shell({ email, children }: { email: string; children: React.Reac
         body: JSON.stringify({ message: q }),
       });
       setGesprek((g) => [...g, { rol: 'bob', tekst: r.text, stappen: r.steps }]);
+      if (r.opgeslagen === false) toast('Dit antwoord is niet opgeslagen. Bewaar het voordat je de pagina ververst.', 'err');
     } catch (err) {
       setGesprek((g) => [...g, { rol: 'bob', tekst: `Dat lukte niet: ${(err as Error).message}` }]);
       toast((err as Error).message, 'err');
@@ -146,7 +160,7 @@ export function Shell({ email, children }: { email: string; children: React.Reac
       if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
       setOpenVraag(null);
     }
-  }, [bezig, kijkOfErIetsWacht, toast]);
+  }, [bezig, historieLaden, kijkOfErIetsWacht, toast]);
 
   /* ---- sneltoetsen ---- */
   useEffect(() => {
@@ -169,7 +183,7 @@ export function Shell({ email, children }: { email: string; children: React.Reac
   const vandaag = new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
-    <Ctx.Provider value={{ vraag, gesprek, bezig, toast, brugOnline }}>
+    <Ctx.Provider value={{ vraag, gesprek, bezig: bezig || historieLaden, toast, brugOnline }}>
       <header className="topbar">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true">
@@ -186,6 +200,7 @@ export function Shell({ email, children }: { email: string; children: React.Reac
           <Ico.zoek className="omnibox-icon" />
           <input
             id="omniboxInput" type="text" autoComplete="off"
+            disabled={historieLaden || bezig}
             placeholder={PLAATSHOUDER[pad] ?? 'Vraag BOB iets…'}
             value={vraagTekst} onChange={(e) => setVraagTekst(e.target.value)}
             aria-label="Vraag BOB iets"
@@ -199,6 +214,7 @@ export function Shell({ email, children }: { email: string; children: React.Reac
           <div className="avatar" title={email}><span>{email[0]?.toUpperCase() ?? 'B'}</span><i className="presence" /></div>
         </div>
       </header>
+      <GoogleAccountPicker />
 
       <div className={`shell${ingeklapt ? ' collapsed' : ''}`}>
         <nav className="sidebar">

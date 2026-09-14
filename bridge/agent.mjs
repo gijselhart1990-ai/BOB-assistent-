@@ -67,6 +67,7 @@ const rood = (s) => `\x1b[31m${s}\x1b[0m`;
 async function api(pad, init = {}) {
   const res = await fetch(`${SITE}/api/bridge${pad}`, {
     ...init,
+    signal: init.signal ?? AbortSignal.timeout(20_000),
     headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json', ...(init.headers || {}) },
   });
   const tekst = await res.text();
