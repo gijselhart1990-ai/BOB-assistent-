@@ -14,7 +14,24 @@ Status: Microsoft-account aangewezen; web-terugkeeradres opgeslagen en gecontrol
   Graph-machtiging is alleen `User.Read`; toestemming voor mail en agenda volgt nog.
 - Versleutelde Microsoft-opslag, PKCE en afzonderlijke previewconfiguratie zijn
   geïmplementeerd. Lint, typecontrole, alle tests en build slagen lokaal.
-- Live databasemigratie, Vercel-configuratie, toestemming en acceptatie volgen nog.
+- Migratie 003 is live uitgevoerd; de negen kolommen zijn via een leesquery
+  gecontroleerd. De query-editor staat weer op alleen-lezen.
+- Commit `63d309f` is gedeployd als Preview `C8TGvqvbdw65SVkrW8dQphpPitDa`
+  (Ready, 41 seconden). Productie is niet gewijzigd.
+- Op 13 september zijn client-id, tenant, mailbox en werkcontext opgeslagen als
+  afzonderlijke Microsoft-previewvariabelen voor `maintenance/repository-foundation`.
+- Het clientgeheim is door de eigenaar opgeslagen en de aanwezigheid op de
+  Preview-branch is gecontroleerd zonder de waarde te lezen. Er staat ook een
+  extra kopie onder Production; deze is niet gewijzigd.
+- Herdeployment `E1AskMLnWuHPXwNeooRQanqsiSqs` is Ready (54 seconden).
+  Microsoft-aanmelding is gestart vanuit de Standup Zorg-werkcontext.
+- De eigenaar heeft de koppeling voltooid: Instellingen toont Microsoft gekoppeld
+  binnen de Standup Zorg-werkcontext. Het Outlook-scherm toont een succesvolle
+  mailopvraging met nul ongelezen berichten (de UI toont dit alleen bij `outlook.ok`).
+- Het oude Microsoft-toestemmingsvenster is gesloten om verwarring te voorkomen.
+  Wisselen naar ActiefLeren toont Outlook als niet gekoppeld; terugwisselen naar
+  Standup Zorg herstelt de succesvolle mailweergave zonder opnieuw aanmelden.
+  Live agendacontrole en tokenverversing na verloop blijven openstaande acceptatiepunten.
 
 ## Feitelijke uitgangssituatie
 

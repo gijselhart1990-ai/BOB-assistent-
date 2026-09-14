@@ -100,7 +100,18 @@ export default function Vandaag() {
               </button>
             </div>
             <div className="card-body">
-              {agenda.bezig ? <Skelet /> : <Agenda data={agenda.data} offset={offset} />}
+              {agenda.bezig ? <Skelet /> : <>
+                <div aria-label="Status van agenda’s" style={{ marginBottom: 12 }}>
+                  {(['google', 'microsoft'] as const).map((bron) => {
+                    const status = agenda.data?.bronnen?.[bron];
+                    const tekst = status === 'ok' ? 'opgehaald'
+                      : status === 'niet gekoppeld' || status === 'niet ingesteld' ? 'niet gekoppeld in deze werkcontext'
+                      : 'ophalen mislukt';
+                    return <p className="rail-tekst" key={bron}>{bron === 'google' ? 'Google Agenda' : 'Outlook-agenda'}: {tekst}</p>;
+                  })}
+                </div>
+                <Agenda data={agenda.data} offset={offset} />
+              </>}
             </div>
             <footer className="card-foot">
               <a href="/api/google/open?service=calendar" target="_blank" rel="noopener">Volledige agenda bekijken <span className="arrow">↗</span></a>
